@@ -1,0 +1,14 @@
+Package: svdParallel
+Title: Parallel implementation of SVD
+Version: 0.1.0
+Authors@R: c(person("Claudia", "Serrano", , "claudiaserranocolome@gmail.com", role = "aut"),
+    person("Juan R.", "Gonzalez", ,"juanr.gonzalez@isglobal.org", role = c("aut", "cre")))
+Description: To be supplie
+Depends: R (>= 3.5.0)
+License: MIT
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr

@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.Rbuildignore
+vignettes/.Rhistory
+svdParallel.Rproj
+
+*/*cache
