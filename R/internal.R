@@ -2,7 +2,8 @@
 ##' @param x tau value
 ##' @param A a real symmetric matrix
 ##' @param i ith row
-##' @param A jth column
+##' @param j jth column
+##' @param sct vector c(s,c,t) where s=sin(theta), c=cos(theta), t=tan(theta)
 
 
 offA <- function(A){
@@ -37,10 +38,10 @@ changes <- function(A,i,j,sct){
   return(B)
 }
 
-buildV <- function(V,i,j,sct){
-  Vi <- V[, i]
-  V[, i] <- sct[2]*Vi + sct[1]*V[, j]
-  V[, j] <- -sct[1]*Vi + sct[2]*V[, j]
+buildV <- function(A,i,j,sct){
+  Ai <- A[, i]
+  A[, i] <- sct[2]*Ai + sct[1]*A[, j]
+  A[, j] <- -sct[1]*Ai + sct[2]*A[, j]
   
   return(V)
 }
