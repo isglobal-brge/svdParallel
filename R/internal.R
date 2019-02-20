@@ -11,30 +11,20 @@ offA <- function(A){
   return(ans)
 }
 
-solve2 <- function(x){
-  ss <- sqrt(x^2 + 1)
-  x1 <- -x + ss
-  x2 <- -x -ss
-  ans <- c(x1,x2)
-  return(ans)
-}
 
-
-rotsct <- function(A,i,j){
-  tau <- (A[i,i]-A[j,j])/(2*A[i,j])
-  sol <- solve2(tau)
-  t <- sol[which.min(abs(sol))]
-  c <- 1/sqrt(1+t^2)
-  s <- c*t  
+fsct <- function(A,i,j){
+  theta <- 0.5*atan2(2*A[i,j],A[i,i]-A[j,j])
+  c <- cos(theta)
+  s <- sin(theta)
+  t <- tan(theta)
   ans <- c(s, c, t)
   return(ans)
 }
 
-changes <- function(A,i,j){
+changes <- function(A,i,j,sct){
   n <- nrow(A)
-  sct <- rotsct(A,i,j)
   B <- A  
- 
+  
   B[i,] <- B[,i] <- sct[2]*A[i,]+sct[1]*A[j,]
   B[j,] <- B[,j] <- -sct[1]*A[i,]+sct[2]*A[j,]
   
@@ -46,6 +36,15 @@ changes <- function(A,i,j){
   
   return(B)
 }
+
+buildV <- function(V,i,j,sct){
+  Vi <- V[, i]
+  V[, i] <- sct[2]*Vi + sct[1]*V[, j]
+  V[, j] <- -sct[1]*Vi + sct[2]*V[, j]
+  
+  return(V)
+}
+
 
 
 

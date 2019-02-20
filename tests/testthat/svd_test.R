@@ -5,4 +5,4 @@ identical(svd(XX)$d, Jacobi(XX))
 
 microbenchmark::microbenchmark(jacobi=Jacobi(XX),
                                svd=svd(XX),
-                               jacobiR=JacobiR(XX, only.values=TRUE))
+                               jacobiR=JacobiR(XX, only.values=FALSE))
