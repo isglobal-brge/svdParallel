@@ -1,8 +1,12 @@
 ##' @title Auxiliar functions (not to be called by the user)
 ##' @param x tau value
 ##' @param A a real symmetric matrix
+##' @param V a real symmetrix matrix
 ##' @param i ith row
-##' @param A jth column
+##' @param j jth column
+##' @param ind vector with i and j indexes: c(i,j)
+##' @param sct vector with (sin(theta),cos(theta),tan(theta)) of the Jacobi rotation
+
 
 
 offA <- function(A){
@@ -47,6 +51,38 @@ changes <- function(A,i,j){
   return(B)
 }
 
+Vij <- function(ind, A, V){
+  
+  theta <- 0.5*atan2(2*A[ind[1],ind[2]],A[ind[1],ind[1]]-A[ind[2],ind[2]])
+  c <- cos(theta)
+  s <- sin(theta)
+  t <- tan(theta)
+  sct <- c(s, c, t)
+  
+  Vi <- V[, ind[1]]
+  V[, ind[1]] <- sct[2]*Vi + sct[1]*V[, ind[2]]
+  V[, ind[2]] <- -sct[1]*Vi + sct[2]*V[, ind[2]]
+  
+  Vs <- list(i=V[,ind[1]],j=V[,ind[2]])
+  
+  ans <- list(ij=ind, Vs=Vs, sct=sct)
+  return(ans)
+  
+}
 
-
+parChanges <- function(A,ind,sct){
+  n <- nrow(A)
+  B <- A  
+  
+  B[ind[1],] <- B[,ind[1]] <- sct[2]*A[ind[1],]+sct[1]*A[ind[2],]
+  B[ind[2],] <- B[,ind[2]] <- -sct[1]*A[ind[1],]+sct[2]*A[ind[2],]
+  
+  B[ind[1],ind[1]]<- A[ind[1],ind[1]]+sct[3]*A[ind[1],ind[2]]
+  B[ind[2],ind[2]] <- A[ind[2],ind[2]]-sct[3]*A[ind[1],ind[2]]
+  
+  B[ind[1],ind[2]]<- 0 
+  B[ind[2],ind[1]] <- 0
+  
+  return(B)
+}
 

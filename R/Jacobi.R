@@ -1,8 +1,8 @@
-##' SVD using Jacoxi algorhtm 
+##' SVD using Jacobi algorithm 
 ##'
 ##' Eigenvalues and eigenvectores of a real symmetric matrix using 
-##' two-sided Jacoxi algorithm
-##' @title SVD using Jacoxi algorhtm
+##' two-sided Jacobi algorithm
+##' @title SVD using Jacobi algorithm
 ##' @param x a real symmetric matrix
 ##' @param tol a small positive error tolerance. Default is machine tolerance
 ##' @export Jacobi
