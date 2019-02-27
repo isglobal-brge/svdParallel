@@ -34,9 +34,27 @@ rotsct <- function(A,i,j){
   return(ans)
 }
 
-changes <- function(A,i,j){
+
+fsct <- function(A,i,j){
+  theta <- 0.5*atan2(2*A[i,j],A[i,i]-A[j,j])
+  c <- cos(theta)
+  s <- sin(theta)
+  t <- tan(theta)
+  ans <- c(s, c, t)
+  return(ans)
+}
+
+
+buildV <- function(A,i,j,sct){
+  Ai <- A[, i]
+  A[, i] <- sct[2]*Ai + sct[1]*A[, j]
+  A[, j] <- -sct[1]*Ai + sct[2]*A[, j]
+  
+  return(V)
+}
+
+changes <- function(A,i,j,sct){
   n <- nrow(A)
-  sct <- rotsct(A,i,j)
   B <- A  
  
   B[i,] <- B[,i] <- sct[2]*A[i,]+sct[1]*A[j,]
@@ -85,4 +103,13 @@ parChanges <- function(A,ind,sct){
   
   return(B)
 }
+
+
+
+
+
+
+
+
+
 
