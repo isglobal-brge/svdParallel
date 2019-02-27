@@ -18,6 +18,7 @@ svdJacobi <- function(x, tol=.Machine$double.eps){
   p <- ncol(A)
   if(p<n){
     A <- crossprod(x)
+    print("HEY")
   }
   else{
     A <- tcrossprod(x)
