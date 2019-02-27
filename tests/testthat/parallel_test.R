@@ -14,3 +14,4 @@ jacobi <- Jacobi(mat)
 
 parJ$values
 jacobi$values
+
