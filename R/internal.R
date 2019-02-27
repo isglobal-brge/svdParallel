@@ -50,7 +50,7 @@ buildV <- function(A,i,j,sct){
   A[, i] <- sct[2]*Ai + sct[1]*A[, j]
   A[, j] <- -sct[1]*Ai + sct[2]*A[, j]
   
-  return(V)
+  return(A)
 }
 
 changes <- function(A,i,j,sct){

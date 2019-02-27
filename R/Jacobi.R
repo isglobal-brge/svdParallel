@@ -26,22 +26,18 @@ Jacobi <- function(x, tol=.Machine$double.eps){
       js <- n-k+2-is
       
       for(i in 1:length(is)){
-        if(x[is[i],js[i]]!=0){
-          sct <- fsct(x,is[i],js[i])
-          x <- changes(x,is[i],js[i],sct)
-          V <- buildV(V,is[i],js[i],sct) 
-        }
+        sct <- fsct(x,is[i],js[i])
+        x <- changes(x,is[i],js[i],sct)
+        V <- buildV(V,is[i],js[i],sct)
       }
       
       if(k>2){
         is2 <- seq(n-k+2,n-floor(k/2),1)
         js2 <- 2*n-k+2-is2
         for(i in 1:length(is2)){
-          if(x[is2[i],js2[i]]!=0){
-            sct <- fsct(x,is2[i],js2[i])
-            x <- changes(x,is2[i],js2[i],sct)
-            V <- buildV(V,is2[i],js2[i],sct)          
-          }
+          sct <- fsct(x,is2[i],js2[i])
+          x <- changes(x,is2[i],js2[i],sct)
+          V <- buildV(V,is2[i],js2[i],sct)          
         }
       }
     }
@@ -56,14 +52,11 @@ Jacobi <- function(x, tol=.Machine$double.eps){
     js3 <- n+2-is3
     
     for(i in 1:length(is3)){
-      if(x[is3[i],js3[i]]!=0){
-        sct <- fsct(x,is3[i],js3[i])
-        x <- changes(x,is3[i],js3[i],sct)
-        V <- buildV(V,is3[i],js3[i],sct)           
-      }
+      sct <- fsct(x,is3[i],js3[i])
+      x <- changes(x,is3[i],js3[i],sct)
+      V <- buildV(V,is3[i],js3[i],sct)           
     }
   }
   ans <- list(values=diag(x), vectors = V)
   ans
 }
-

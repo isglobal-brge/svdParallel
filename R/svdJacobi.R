@@ -14,20 +14,26 @@
 
 
 svdJacobi <- function(x, tol=.Machine$double.eps){
-  n <- nrow(A)
-  p <- ncol(A)
+  n <- nrow(x)
+  p <- ncol(x)
   if(p<n){
     A <- crossprod(x)
-    print("HEY")
+    jacobi <- Jacobi(A,tol)
+    d <- sqrt(abs(jacobi$values))
+    v <- jacobi$vectors
+    u <- x%*%v
+    u <- sweep(u,2,d,FUN="/")
+    ans <- list(d=d, v=v, u=u)
   }
   else{
     A <- tcrossprod(x)
+    jacobi <- Jacobi(A,tol)
+    d <- sqrt(abs(jacobi$values))
+    u <- jacobi$vectors
+    v <- t(x)%*%u
+    v <- sweep(v,2,d,FUN="/")
+    ans <- list(d=d, v=v, u=u)
   }
-  jacobi <- Jacobi(A,tol)
-  d <- sqrt(jacobi$values)
-  v <- jacobi$vectors
-  u <- A%*%v
-  u <- sweep(u,2,d,FUN="/")
-  ans <- list(d=d, v=v, u=u)
+
   return(ans)
 }
