@@ -21,3 +21,21 @@ parsvdJ$v
 
 svdJ$u
 svdC$u
+
+#Testing times: only Jacobi functions (for symmetric matrices):
+X <- matrix(rnorm(100), ncol=10)
+XX <- crossprod(X)
+ncores <- detectCores() - 1
+registerDoParallel(cores=ncores)
+cl <- makeCluster(ncores)
+microbenchmark::microbenchmark(jacobi=Jacobi(XX),
+                               parjacobi=parJacobi(XX),
+                               svd=svd(XX),
+                               jacobiR=JacobiR(XX, only.values=TRUE))
+stopCluster(cl)
+#Testing times: SVD for a general matrix:
+
+microbenchmark::microbenchmark(svdJacobi=svdJacobi(X),
+                               parsvdJacobi=parsvdJacobi(X),
+                               svd=svd(X))
+
