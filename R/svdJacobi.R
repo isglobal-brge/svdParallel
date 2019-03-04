@@ -9,11 +9,14 @@
 ##' @examples
 ##' (V <- (matrix(1:30, nrow=5, ncol=6)))
 ##' svdJacobi(V)
-##' all.equal(Jacobi(V)$v, base::svd(V)$v)
+##' all.equal(svdJacobi(V)$v, base::svd(V)$v)
 ##' @return a list of three components as for \code{base::svd}
 
 
 svdJacobi <- function(x, tol=.Machine$double.eps){
+  if(!is.matrix(x)){
+    x = as.matrix(x)
+  }
   n <- nrow(x)
   p <- ncol(x)
   if(p<n){
@@ -21,7 +24,7 @@ svdJacobi <- function(x, tol=.Machine$double.eps){
     jacobi <- Jacobi(A,tol)
     d <- sqrt(abs(jacobi$values))
     v <- jacobi$vectors
-    u <- x%*%v
+    u <- crossprod(t(x),v)
     u <- sweep(u,2,d,FUN="/")
     ans <- list(d=d, v=v, u=u)
   }
@@ -30,7 +33,7 @@ svdJacobi <- function(x, tol=.Machine$double.eps){
     jacobi <- Jacobi(A,tol)
     d <- sqrt(abs(jacobi$values))
     u <- jacobi$vectors
-    v <- t(x)%*%u
+    v <- crossprod(x,u)
     v <- sweep(v,2,d,FUN="/")
     ans <- list(d=d, v=v, u=u)
   }

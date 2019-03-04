@@ -3,7 +3,7 @@
 ##' Eigenvalues and eigenvectores of a real symmetric matrix using 
 ##' two-sided Jacobi algorithm
 ##' @title SVD of a symmetric matrix using Jacobi algorithm
-##' @param x a real symmetric matrix
+##' @param x a real symmetric matrix. Also data frames.
 ##' @param tol a small positive error tolerance. Default is machine tolerance
 ##' @export Jacobi
 ##' @examples
@@ -13,6 +13,12 @@
 ##' @return a list of two components as for \code{base::eigen}
 
 Jacobi <- function(x, tol=.Machine$double.eps){
+  if(!is.matrix(x)){
+    x = as.matrix(x)
+  }
+  if(!isSymmetric(x)){
+    stop("only real symmetric matrices are allowed") 
+  }
   n <- nrow(x)
   V <- diag(n)
   while(offA(x)>tol){

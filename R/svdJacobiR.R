@@ -14,6 +14,9 @@
 
 
 svdJacobiR <- function(x, ...){
+  if(!is.matrix(x)){
+    x = as.matrix(x)
+  }
   n <- nrow(x)
   p <- ncol(x)
   if(p<n){

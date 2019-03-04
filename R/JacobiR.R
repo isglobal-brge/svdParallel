@@ -1,9 +1,9 @@
 ##' The Jacobi Algorithm
 ##'
-##' Eigenvalues and optionally, eigenvectore of a real symmetric matrix using the
+##' Eigenvalues and optionally, eigenvectores of a real symmetric matrix using the
 ##' classical Jacobi algorithm, (Jacobi, 1854)
 ##' @title The Jacobi Algorithm in Pure R
-##' @param x a real symmetric matrix
+##' @param x a real symmetric matrix. Also data frames
 ##' @param only.values A logical value: Do you want only the eigenvalues?
 ##' @param eps a small positive error tolerance
 ##' @export JacobiR
@@ -16,8 +16,12 @@
 JacobiR <- function(x, only.values = FALSE,
                     eps = if(!only.values) .Machine$double.eps else
                       sqrt(.Machine$double.eps)) {
-  if(!isSymmetric(x)) 
-    stop("only real symmetric matrices are allowed")
+  if(!is.matrix(x)){
+    x = as.matrix(x)
+  }
+  if(!isSymmetric(x)){
+    stop("only real symmetric matrices are allowed") 
+  }
   n <- nrow(x)
   H <- if(only.values) NULL else diag(n)
   eps <- max(eps, .Machine$double.eps)
