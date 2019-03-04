@@ -4,7 +4,6 @@
 ##' classical Jacobi algorithm, (Jacobi, 1854)
 ##' @title The Jacobi Algorithm in Pure R
 ##' @param x a real symmetric matrix
-##' @param symmetric a logical value.  Is the matrix symmetric?  (Only symmetric matrices are allowed.)
 ##' @param only.values A logical value: Do you want only the eigenvalues?
 ##' @param eps a small positive error tolerance
 ##' @export JacobiR
@@ -14,10 +13,10 @@
 ##' identical(Jacobi(V), JacobiR(V))
 ##' all.equal(Jacobi(V)$values, base::eigen(V)$values)
 ##' @return a list of two components as for \code{base::eigen}
-JacobiR <- function(x, symmetric = TRUE, only.values = FALSE,
+JacobiR <- function(x, only.values = FALSE,
                     eps = if(!only.values) .Machine$double.eps else
                       sqrt(.Machine$double.eps)) {
-  if(!symmetric) 
+  if(!isSymmetric(x)) 
     stop("only real symmetric matrices are allowed")
   n <- nrow(x)
   H <- if(only.values) NULL else diag(n)
