@@ -1,4 +1,5 @@
-parallelSVD <- function(x, ncomponents, k, ...){
+parallelSVD <- function(x, ncomponents, k, 
+                        method=c("svd", "irlba"), ...){
   
   xx <- 
     
