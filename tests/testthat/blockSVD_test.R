@@ -6,5 +6,25 @@ X = matrix(rnorm(90),nrow=10)
 
 blockSVD(X, 3, 2)$d
 svd(X)$d
+library(irlba)
+p <- parallelSVD(X,mc.cores = 3,method = "irlba")
 
+x1  <- matrix(rnorm(10000), nrow=1000)
+x2  <- matrix(rnorm(10000), nrow=1000)
+
+s1 <- svd(t(x1))
+s2 <- svd(t(x2))
+
+
+m1 <- sweep(s1$u, 2, FUN="*", s1$d)
+m2 <- sweep(s2$u, 2, FUN="*", s2$d)
+m <- cbind(m1,m2)
+
+ss1 <- svd(m)
+
+ss2 <- svd(cbind(t(x1), t(x2)))
+
+X <- cbind(t(x1), t(x2))
+
+ss3 <- blockSVD(X, q=1, k=nrow(x1))
 
