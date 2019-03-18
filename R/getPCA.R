@@ -59,7 +59,7 @@ getPCA <- function(x, center = TRUE, scale = TRUE,
   ind.cos2 <- sweep(Y**2, 1, ind.iner, FUN="/")
   ind.qual <- t(apply(ind.cos2, 1, cumsum))
   
-  ans <- list(var.coord=var.coord, Y=Y, var = svdX$d^2, percvar=variance, components = svdX$v)
+  ans <- list(varcoord=var.coord, Y=Y, var = svdX$d^2, percvar=variance, components = svdX$v, method = method)
   class(ans) <- "getPCA"
   return(ans)
 }
