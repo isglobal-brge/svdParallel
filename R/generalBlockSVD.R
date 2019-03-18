@@ -5,11 +5,11 @@
 ##' @param x a real nxp matrix
 ##' @param k number of local SVDs to concatenate at each level 
 ##' @param q number of levels
-##' @export blockSVD
+##' @export generalBlockSVD
 ##' @examples
 ##' (V <- (matrix(1:30, nrow=5, ncol=6)))
-##' blockSVD(V,2,3)
-##' all.equal(blockSVD(V,2,3)$u, base::svd(V)$u)
+##' generalBlockSVD(V,2,3)
+##' all.equal(generalBlockSVD(V,2,3)$u, base::svd(V)$u)
 ##' @return a list of two components with the singular values and left singular vectors of the matrix
 
 
