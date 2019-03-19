@@ -29,7 +29,7 @@ plot.getPCA <- function(x, type="variables", comps=c(1,2), ...){
     abline(h=0, lty=2)
     abline(v=0, lty=2)
     lab.var <- abbreviate(rownames(x$varcoord))
-    text(x$varcoord[, comps], adj=c(1,-1), labels=lab.var, ...)
+    text(x$varcoord[, comps], adj=c(1,-0.5), pos=c(1,2), labels=lab.var, ...)
     arrows(rep(0,10), rep(0,10), x$varcoord[,comps[1]], x$varcoord[,comps[2]],
          length=0.1,angle=20)
     curve(sqrt(1-x^2),-1,1,add=T)

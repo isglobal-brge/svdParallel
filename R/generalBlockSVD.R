@@ -13,14 +13,18 @@
 ##' @return a list of two components with the singular values and left singular vectors of the matrix
 
 
-generalBlockSVD <- function(A, k, q){
+generalBlockSVD <- function(A, k=2, q=1){
 	n <- nrow(A)
 	p <- ncol(A)
 	M <- k^q
+	
+	if(M>p)
+	  stop("k^q must not be greater than the number of columns of the matrix")
 	Ai <- list()
-	for(i in 1:M){
-		Ai[[i]] <- A[,(p/M*(i-1)+1):(p/M*i)]
-	}
+	p <- ncol(A)
+	cols <- seq(1,p,1)
+	index <- split(cols, cut(cols,breaks=M))
+	Ai <- lapply(index, function(v,index) v[,index], v=A) 
 	
 	for(j in 1:q){
 		svdj <- lapply(Ai, svd)
@@ -29,19 +33,36 @@ generalBlockSVD <- function(A, k, q){
 			if(length(svdj[[((i-1)*k+1)]]$d)>1){
 				Ai[[i]] <- crossprod(t(svdj[[(i-1)*k+1]]$u),diag(svdj[[(i-1)*k+1]]$d))
 				for(l in 1:(k-1)){
-					Ai[[i]] <- cbind(Ai[[i]],crossprod(t(svdj[[(i-1)*k+1+l]]$u),diag(svdj[[(i-1)*k+1+l]]$d)))
+				  if(length(svdj[[((i-1)*k+1+l)]]$d)>1){
+					  Ai[[i]] <- cbind(Ai[[i]],crossprod(t(svdj[[(i-1)*k+1+l]]$u),diag(svdj[[(i-1)*k+1+l]]$d)))
+				  }
+				  else{
+				    Ai[[i]] <- cbind(Ai[[i]],crossprod(t(svdj[[(i-1)*k+1+l]]$u),svdj[[(i-1)*k+1+l]]$d))
+				  }
 				}
 			}
 			else{
 				Ai[[i]] <- crossprod(t(svdj[[(i-1)*k+1]]$u),svdj[[(i-1)*k+1]]$d)
 				for(l in 1:(k-1)){
-					Ai[[i]] <- cbind(Ai[[i]],crossprod(t(svdj[[(i-1)*k+1+l]]$u),svdj[[(i-1)*k+1+l]]$d))
+				  if(length(svdj[[((i-1)*k+1+l)]]$d)>1){
+				    Ai[[i]] <- cbind(Ai[[i]],crossprod(t(svdj[[(i-1)*k+1+l]]$u),diag(svdj[[(i-1)*k+1+l]]$d)))
+				  }
+				  else{
+				    Ai[[i]] <- cbind(Ai[[i]],crossprod(t(svdj[[(i-1)*k+1+l]]$u),svdj[[(i-1)*k+1+l]]$d))
+				  }
 				}
 			}
 						 	
 		}	
 	}
+	
+	if(length(Ai)>1){
+	  Ai <- Reduce(cbind,Ai)
+	}
+	
 	svdA <- svd(Ai[[1]])
-	ans <- list(d=svdA$d, u=svdA$u)
+	v <- crossprod(A,svdA$u)
+	v <- sweep(v,2,svdA$d,FUN="/")
+	ans <- list(d=svdA$d, u=svdA$u, v=v)
 	return(ans)
 }
