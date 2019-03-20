@@ -17,51 +17,44 @@
 
 blockSVD <- function(x, ncomponents=2, mc.cores=2,
                         method="svd"){
-  if(!is.matrix(x)){
-    x = as.matrix(x)
+  
+  method.block <- charmatch(method, c("svd", "irlba"))
+  
+  svdPartial <- function(x){
+    ss <- svd(x)
+    ans <- sweep(ss$u, 2, FUN="*", ss$d)
+    return(ans)
   }
   
-  if(charmatch(method, c("svd", "irlba")) == 1){
+  if(is.list(x) && !is.data.frame(x)){
+    xx <- lapply(x,svdPartial)
+    X <- Reduce(cbind, xx)
+    x <- Reduce(cbind, x)
+  }
+  else{
+    x = as.matrix(x)
     p <- ncol(x)
     cols <- seq(1,p,1)
     index <- split(cols, cut(cols,breaks=mc.cores))
     xx <- lapply(index, function(v,index) v[,index], v=x) 
-    
-    svdPartial <- function(x){
-      ss <- svd(x)
-      ans <- sweep(ss$u, 2, FUN="*", ss$d)
-      return(ans)
-    }  
-    
     ll <- lapply(xx, svdPartial)
     X <- Reduce(cbind,ll)
+  }
+  
+  if(method.block == 1){
     s <- svd(X)
     v <- crossprod(x,s$u)
     v <- sweep(v,2,s$d,FUN="/")
     ans <- list(d = s$d, u = s$u, v = v)
-    ans
   }
-  if(charmatch(method, c("svd", "irlba")) == 2){
-    partitions <- 5
-    p <- ncol(x)
-    cols <- seq(1,p,1)
-    index <- split(cols, cut(cols,breaks=mc.cores))
-    xx <- lapply(index, function(v,index) v[,index], v=x) 
-    
-    svdPartial <- function(x){
-      ss <- svd(x)
-      ans <- sweep(ss$u, 2, FUN="*", ss$d)
-      return(ans)
-    }  
-    
-    ll <- lapply(xx, svdPartial)
-    X <- Reduce(cbind,ll)
+  
+  if(method.block == 2){
     s <- irlba(X, nv=0, nu=ncomponents)
     v <- crossprod(x,s$u)
     v <- sweep(v,2,s$d,FUN="/")
     ans <- list(d = s$d, u = s$u, v = v)
-    ans
   }
+  
   return(ans)
 }
 
