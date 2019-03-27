@@ -50,7 +50,7 @@ getPCA <- function(x, center = TRUE, scale = TRUE,
       x.norm <- centerList(x, center, scale)
     }
     else{
-      x <- Reduce(cbind, x)
+      x <- Reduce(rbind, x)
       x.scale <- scale(x, center, scale)
       x.norm <- x.scale/sqrt(nrow(x.scale)-1)
     }

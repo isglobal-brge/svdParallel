@@ -44,6 +44,6 @@ plot.getPCA <- function(x, type="variables", comps=c(1,2), ...){
          ylab=paste("PC",comps[2],"(",round(x$percvar[comps[2]]*100,2),"%)"), ...)
     abline(h=0)
     abline(v=0)
-    points(x$Y[,1], x$Y[,2], pch=16, ...)
+    points(x$Y[,comps[1]], x$Y[,comps[2]], pch=16, ...)
   }
 }
