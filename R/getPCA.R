@@ -17,16 +17,49 @@
 getPCA <- function(x, center = TRUE, scale = TRUE, 
                    method = "blockSVD",
                    tol=.Machine$double.eps, ...){
-  if(!is.matrix(x)){
-    x = as.matrix(x)
-  }
-  
-  x.scale <- scale(x, center, scale)
-  x.norm <- x.scale/sqrt(nrow(x.scale)-1)
   
   method.pca <- charmatch(method, c("blockSVD", "generalBlockSVD", "Jacobi", "JacobiR"))
   if (is.na(method.pca))
     stop("type must be 'blockSVD', 'generalBlockSVD', 'Jacobi' or 'JacobiR'")
+  
+  if(is.list(x) && !is.data.frame(x)){
+    if(method.pca == 1){
+      
+      centerList <- function(l, center, scale){
+        if(center){
+          m <- lapply(l, function(v) apply(v,2,mean))
+          w <- lapply(l,nrow)
+          mm <- Reduce(rbind,m)
+          wm <- apply(mm,2, function(v) weighted.mean(v,w))
+          l <- lapply(l, function(v) sweep(v,2,wm,FUN="-"))
+        }
+        if(scale){
+          if(!center)
+            stop("to use this method if we scale we need to center")
+          s <- lapply(l, function(v) apply(v,2,function(y) sum(y^2)/(length(y)-1)))
+          ss <- Reduce(rbind,s)
+          ww <- lapply(w,function(v) v-1)
+          ws <- apply(ss,2,function(v) weighted.mean(v,ww))
+          ws <- ws*Reduce(sum,ww)/(Reduce(sum,w)-1)
+          l <- lapply(l, function(v) sweep(v,2,sqrt(ws),FUN="/"))
+        }
+        numrow <- nrow(Reduce(rbind,l))
+        l <- lapply(l, function(v) v/sqrt(numrow-1))
+      }
+      
+      x.norm <- centerList(x, center, scale)
+    }
+    else{
+      x <- Reduce(cbind, x)
+      x.scale <- scale(x, center, scale)
+      x.norm <- x.scale/sqrt(nrow(x.scale)-1)
+    }
+  }
+  else{
+    x <- as.matrix(x)
+    x.scale <- scale(x, center, scale)
+    x.norm <- x.scale/sqrt(nrow(x.scale)-1)
+  }
   
   if (method.pca==1) {
     svdX <- blockSVD(x.norm, ...)
@@ -51,7 +84,12 @@ getPCA <- function(x, center = TRUE, scale = TRUE,
   
   
   #------------ Individuals ----------------#
-  Y <- x%*%svdX$v*sqrt(nrow(x))
+  if(is.matrix(x)){
+    Y <- x%*%svdX$v*sqrt(nrow(x))
+  }
+  else{
+    Y <- Reduce(rbind,x)%*%svdX$v*sqrt(nrow(Reduce(rbind,x)))
+  }
   colnames(Y) <- paste("PC",1:ncol(var.coord),sep="")
   ind.contr <- apply(Y**2, 2, function(v) v*100/sum(v))
   ind.iner <- apply(Y**2, 1, sum)

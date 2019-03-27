@@ -1,6 +1,6 @@
 ##' SVD using an incremental SVD algorithm.
 ##'
-##' Singular values and left singular vectors of a real nxp matrix 
+##' Singular values and left singular vectors of a real nxp matrix with n>p
 ##' @title SVD using an incremental SVD algorithm.
 ##' @param x a real nxp matrix
 ##' @param mc.cores number of partitions of the matrix, number of svd computed in parallel.
@@ -27,32 +27,29 @@ blockSVD <- function(x, ncomponents=2, mc.cores=2,
   }
   
   if(is.list(x) && !is.data.frame(x)){
-    xx <- lapply(x,svdPartial)
+    xt <- lapply(x,function(v) t(v)) 
+    xx <- lapply(xt,svdPartial)
     X <- Reduce(cbind, xx)
-    x <- Reduce(cbind, x)
   }
   else{
-    x = as.matrix(x)
-    p <- ncol(x)
+    x <- as.matrix(x)
+    xt <- t(x)
+    p <- ncol(xt)
     cols <- seq(1,p,1)
     index <- split(cols, cut(cols,breaks=mc.cores))
-    xx <- lapply(index, function(v,index) v[,index], v=x) 
+    xx <- lapply(index, function(v,index) v[,index], v=xt) 
     ll <- lapply(xx, svdPartial)
     X <- Reduce(cbind,ll)
   }
   
   if(method.block == 1){
     s <- svd(X)
-    v <- crossprod(x,s$u)
-    v <- sweep(v,2,s$d,FUN="/")
-    ans <- list(d = s$d, u = s$u, v = v)
+    ans <- list(d = s$d, v = s$u)
   }
   
   if(method.block == 2){
     s <- irlba(X, nv=0, nu=ncomponents)
-    v <- crossprod(x,s$u)
-    v <- sweep(v,2,s$d,FUN="/")
-    ans <- list(d = s$d, u = s$u, v = v)
+    ans <- list(d = s$d, v = s$u)
   }
   
   return(ans)
