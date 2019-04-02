@@ -85,10 +85,10 @@ getPCA <- function(x, center = TRUE, scale = TRUE,
   
   #------------ Individuals ----------------#
   if(is.matrix(x)){
-    Y <- x%*%svdX$v*sqrt(nrow(x))
+    Y <- x.norm%*%svdX$v*sqrt(nrow(x.norm))
   }
   else{
-    Y <- Reduce(rbind,x)%*%svdX$v*sqrt(nrow(Reduce(rbind,x)))
+    Y <- Reduce(rbind,x.norm)%*%svdX$v*sqrt(nrow(Reduce(rbind,x.norm)))
   }
   colnames(Y) <- paste("PC",1:ncol(var.coord),sep="")
   ind.contr <- apply(Y**2, 2, function(v) v*100/sum(v))

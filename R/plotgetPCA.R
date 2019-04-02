@@ -39,7 +39,7 @@ plot.getPCA <- function(x, type="variables", comps=c(1,2), ...){
   }
 
   else{
-    plot(x$Y[,1:2], main="Individuals",
+    plot(x$Y[,comps], main="Individuals",
          type="n", xlab=paste("PC",comps[1],"(",round(x$percvar[comps[1]]*100,2),"%)"),
          ylab=paste("PC",comps[2],"(",round(x$percvar[comps[2]]*100,2),"%)"), ...)
     abline(h=0)
