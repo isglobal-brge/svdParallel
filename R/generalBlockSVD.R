@@ -18,6 +18,8 @@ generalBlockSVD <- function(A, k=2, q=1){
 	p <- ncol(A)
 	M <- k^q
 	
+	if(!is.matrix(A))
+	  A <- as.matrix(A)
 	if(M>p)
 	  stop("k^q must not be greater than the number of columns of the matrix")
 	Ai <- list()
@@ -30,29 +32,10 @@ generalBlockSVD <- function(A, k=2, q=1){
 		svdj <- lapply(Ai, svd)
 		Ai <- list()
 		for(i in 1:(length(svdj)/k)){
-			if(length(svdj[[((i-1)*k+1)]]$d)>1){
-				Ai[[i]] <- crossprod(t(svdj[[(i-1)*k+1]]$u),diag(svdj[[(i-1)*k+1]]$d))
-				for(l in 1:(k-1)){
-				  if(length(svdj[[((i-1)*k+1+l)]]$d)>1){
-					  Ai[[i]] <- cbind(Ai[[i]],crossprod(t(svdj[[(i-1)*k+1+l]]$u),diag(svdj[[(i-1)*k+1+l]]$d)))
-				  }
-				  else{
-				    Ai[[i]] <- cbind(Ai[[i]],crossprod(t(svdj[[(i-1)*k+1+l]]$u),svdj[[(i-1)*k+1+l]]$d))
-				  }
-				}
-			}
-			else{
-				Ai[[i]] <- crossprod(t(svdj[[(i-1)*k+1]]$u),svdj[[(i-1)*k+1]]$d)
-				for(l in 1:(k-1)){
-				  if(length(svdj[[((i-1)*k+1+l)]]$d)>1){
-				    Ai[[i]] <- cbind(Ai[[i]],crossprod(t(svdj[[(i-1)*k+1+l]]$u),diag(svdj[[(i-1)*k+1+l]]$d)))
-				  }
-				  else{
-				    Ai[[i]] <- cbind(Ai[[i]],crossprod(t(svdj[[(i-1)*k+1+l]]$u),svdj[[(i-1)*k+1+l]]$d))
-				  }
-				}
-			}
-						 	
+		  Ai[[i]] <- sweep(svdj[[(i-1)*k+1]]$u, 2, FUN="*",svdj[[(i-1)*k+1]]$d)
+		  for(l in 1:(k-1)){
+		    Ai[[i]] <- cbind(Ai[[i]],sweep(svdj[[(i-1)*k+1+l]]$u,2, FUN="*",svdj[[(i-1)*k+1+l]]$d))
+		  }
 		}	
 	}
 	
