@@ -30,26 +30,61 @@ blockSVD <- function(x, ncomponents=2, mc.cores=2,
     xt <- lapply(x,function(v) t(v)) 
     xx <- lapply(xt,svdPartial)
     X <- Reduce(cbind, xx)
+    
+    if(method.block == 1){
+      s <- svd(X)
+      ans <- list(d = s$d, v = s$u)
+    }
+    
+    if(method.block == 2){
+      s <- irlba(X, nv=0, nu=ncomponents)
+      ans <- list(d = s$d, v = s$u)
+    }
   }
   else{
     x <- as.matrix(x)
-    xt <- t(x)
-    p <- ncol(xt)
-    cols <- seq(1,p,1)
-    index <- split(cols, cut(cols,breaks=mc.cores))
-    xx <- lapply(index, function(v,index) v[,index], v=xt) 
-    ll <- lapply(xx, svdPartial)
-    X <- Reduce(cbind,ll)
-  }
-  
-  if(method.block == 1){
-    s <- svd(X)
-    ans <- list(d = s$d, v = s$u)
-  }
-  
-  if(method.block == 2){
-    s <- irlba(X, nv=0, nu=ncomponents)
-    ans <- list(d = s$d, v = s$u)
+    if(nrow(x)>=ncol(x)){
+      xt <- t(x)
+      p <- ncol(xt)
+      cols <- seq(1,p,1)
+      index <- split(cols, cut(cols,breaks=mc.cores))
+      xx <- lapply(index, function(v,index) v[,index], v=xt) 
+      ll <- lapply(xx, svdPartial)
+      X <- Reduce(cbind,ll)
+      
+      if(method.block == 1){
+        s <- svd(X)
+        ans <- list(d = s$d, v = s$u)
+      }
+      
+      if(method.block == 2){
+        s <- irlba(X, nv=0, nu=ncomponents)
+        ans <- list(d = s$d, v = s$u)
+      }
+    }
+    else{
+      p <- ncol(x)
+      cols <- seq(1,p,1)
+      index <- split(cols, cut(cols,breaks=mc.cores))
+      xx <- lapply(index, function(v,index) v[,index], v=x) 
+      ll <- lapply(xx, svdPartial)
+      X <- Reduce(cbind,ll)
+      
+      if(method.block == 1){
+        s <- svd(X)
+        v <- crossprod(x,s$u)
+        v <- sweep(v,2,s$d,FUN="/")
+        ans <- list(d = s$d, u = s$u, v = v)
+      }
+      
+      if(method.block == 2){
+        s <- irlba(X, nv=0, nu=ncomponents)
+        v <- crossprod(x,s$u)
+        v <- sweep(v,2,s$d,FUN="/")
+        ans <- list(d = s$d, u = s$u, v = v)
+      }
+    }
+    
   }
   
   return(ans)
