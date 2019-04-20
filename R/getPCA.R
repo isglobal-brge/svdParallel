@@ -88,7 +88,7 @@ getPCA <- function(x, center = TRUE, scale = TRUE,
     Y <- x.norm%*%svdX$v*sqrt(nrow(x.norm))
   }
   else{
-    Y <- Reduce(rbind,x.norm)%*%svdX$v*sqrt(nrow(Reduce(rbind,x.norm)))
+    Y <- as.matrix(Reduce(rbind,x.norm))%*%svdX$v*sqrt(nrow(Reduce(rbind,x.norm)))
   }
   colnames(Y) <- paste("PC",1:ncol(var.coord),sep="")
   ind.contr <- apply(Y**2, 2, function(v) v*100/sum(v))

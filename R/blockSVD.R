@@ -74,14 +74,14 @@ blockSVD <- function(x, ncomponents=2, mc.cores=2,
         s <- svd(X)
         v <- crossprod(x,s$u)
         v <- sweep(v,2,s$d,FUN="/")
-        ans <- list(d = s$d, u = s$u, v = v)
+        ans <- list(d = s$d, v = v)
       }
       
       if(method.block == 2){
         s <- irlba(X, nv=0, nu=ncomponents)
         v <- crossprod(x,s$u)
         v <- sweep(v,2,s$d,FUN="/")
-        ans <- list(d = s$d, u = s$u, v = v)
+        ans <- list(d = s$d, v = v)
       }
     }
     

@@ -10,20 +10,26 @@
 ##' (V <- (matrix(1:30, nrow=5, ncol=6)))
 ##' generalBlockSVD(V,2,3)
 ##' all.equal(generalBlockSVD(V,2,3)$u, base::svd(V)$u)
-##' @return a list of two components with the singular values and left singular vectors of the matrix
+##' @return a list of three components with the singular values and left and right singular vectors of the matrix
 
 
 generalBlockSVD <- function(A, k=2, q=1){
+  
+  t <- 0
+  if(nrow(A)>ncol(A)){
+    A <- t(A)
+    t <- 1
+  }
+  
 	n <- nrow(A)
 	p <- ncol(A)
 	M <- k^q
-	
 	if(!is.matrix(A))
 	  A <- as.matrix(A)
 	if(M>p)
 	  stop("k^q must not be greater than the number of columns of the matrix")
+	
 	Ai <- list()
-	p <- ncol(A)
 	cols <- seq(1,p,1)
 	index <- split(cols, cut(cols,breaks=M))
 	Ai <- lapply(index, function(v,index) v[,index], v=A) 
@@ -46,6 +52,13 @@ generalBlockSVD <- function(A, k=2, q=1){
 	svdA <- svd(Ai[[1]])
 	v <- crossprod(A,svdA$u)
 	v <- sweep(v,2,svdA$d,FUN="/")
-	ans <- list(d=svdA$d, u=svdA$u, v=v)
+	
+	if(t==1){
+	  ans <- list(d=svdA$d, u=v, v=svdA$u)
+	}
+	else{
+	  ans <- list(d=svdA$d, u=svdA$u, v=v)  
+	}
+	
 	return(ans)
 }

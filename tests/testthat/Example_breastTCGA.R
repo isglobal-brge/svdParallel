@@ -19,5 +19,16 @@ head(breastTCGA$breast_carcinoma_estrogen_receptor_status)
 
 library(FactoMineR)
 PCA(t(genes))
-gpca <- getPCA(t(genes), mc.cores = 5)
+gpca <- getPCA(t(genes), mc.cores = 5, center=F, scale=F)
+plot(gpca, type="individuals")
 
+microbenchmark::microbenchmark(getPCA(t(genes), mc.cores = 5, center=F, scale=F),
+                               getPCA(t(genes), mc.cores = 10, center=F, scale=F),
+                               PCA(t(genes), graph=FALSE))
+
+
+positive <- pheno$breast_carcinoma_estrogen_receptor_status == "Positive"  
+negative <- pheno$breast_carcinoma_estrogen_receptor_status == "Negative"
+plot(gpca$Y[positive,c(1,2)], main="Individuals",
+       type="p", col="blue",xlab="PC1", ylab="PC2")
+points(gpca$Y[negative,c(1,2)], col="red")
