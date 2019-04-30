@@ -4,6 +4,8 @@
 
 BiocManager::install("Biobase", version = "3.8")
 library(Biobase)
+BiocManager::install("made4", version = "3.8")
+library(made4)
 load("breastTCGA.RData")
 breastTCGA
 
@@ -18,8 +20,20 @@ head(pheno$breast_carcinoma_estrogen_receptor_status)
 head(breastTCGA$breast_carcinoma_estrogen_receptor_status)
 
 library(FactoMineR)
-PCA(t(genes))
-gpca <- getPCA(t(genes), mc.cores = 5, center=F, scale=F)
+res_pca <- PCA(t(genes))
+plot(res_pca)
+
+pb <- pheno$breast_carcinoma_estrogen_receptor_status
+pb <- as.factor(pb)
+group<-droplevels(pbf)
+out <- ord(genes, classvec=group)
+plot(out, nlab=3)
+res_ord <- ord(genes, type="pca")
+plotarrays(res_ord)
+
+
+
+gpca <- getPCA(t(genes), mc.cores = 5, center=T, scale=T)
 plot(gpca, type="individuals")
 
 microbenchmark::microbenchmark(getPCA(t(genes), mc.cores = 5, center=F, scale=F),

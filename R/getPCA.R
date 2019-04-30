@@ -48,6 +48,7 @@ getPCA <- function(x, center = TRUE, scale = TRUE,
       }
       
       x.norm <- centerList(x, center, scale)
+      #x.norm <- lapply(x.norm,function(v) t(v))
     }
     else{
       x <- Reduce(rbind, x)
