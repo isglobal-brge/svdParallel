@@ -6,30 +6,28 @@ BiocManager::install("Biobase", version = "3.8")
 library(Biobase)
 BiocManager::install("made4", version = "3.8")
 library(made4)
-load("breastTCGA.RData")
+
+
+
+data(breastMulti, package="brgedata")
+breastTCGA <- breastMulti[["expression"]]
 breastTCGA
 
-genes <- exprs(breastTCGA)
+
+library(SummarizedExperiment)
+genes <- assay(breastTCGA)
 dim(genes)
 genes[1:5,1:12]
 
-pheno <- pData(breastTCGA)
-#'breast_carcinoma_estrogen_receptor_status' is variable number 12.
-pheno[1:10,12]
-head(pheno$breast_carcinoma_estrogen_receptor_status)
-head(breastTCGA$breast_carcinoma_estrogen_receptor_status)
 
 library(FactoMineR)
 res_pca <- PCA(t(genes))
 plot(res_pca)
 
-pb <- pheno$breast_carcinoma_estrogen_receptor_status
-pb <- as.factor(pb)
-group<-droplevels(pbf)
-out <- ord(genes, classvec=group)
+group<-as.factor(breastTCGA$ER.Status)
+out <- ord(genes, classvec=group, type = "pca")
 plot(out, nlab=3)
-res_ord <- ord(genes, type="pca")
-plotarrays(res_ord)
+plotarrays(out)
 
 
 
