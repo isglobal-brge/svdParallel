@@ -1,9 +1,9 @@
 ##' SVD using an incremental SVD algorithm.
 ##'
-##' Singular values and left singular vectors of a real nxp matrix with n>p
+##' Singular values and left singular vectors of a real nxp matrix.
 ##' @title SVD using an incremental SVD algorithm.
 ##' @param x a real nxp matrix
-##' @param mc.cores number of partitions of the matrix, number of svd computed in parallel.
+##' @param parts number of partitions of the matrix.
 ##' @param ncomponents number of components to be computed. Default 2
 ##' @param method "svd" for complete svd, or "irlba" to compute only the first ncomponents.
 ##' @export blockSVD
@@ -15,7 +15,7 @@
 ##' @return a list of two components with the singular values and left singular vectors of the matrix
 
 
-blockSVD <- function(x, ncomponents=2, mc.cores=2,
+blockSVD <- function(x, ncomponents=2, parts=2,
                         method="svd"){
   
   method.block <- charmatch(method, c("svd", "irlba"))
@@ -47,7 +47,7 @@ blockSVD <- function(x, ncomponents=2, mc.cores=2,
       xt <- t(x)
       p <- ncol(xt)
       cols <- seq(1,p,1)
-      index <- split(cols, cut(cols,breaks=mc.cores))
+      index <- split(cols, cut(cols,breaks=parts))
       xx <- lapply(index, function(v,index) v[,index], v=xt) 
       ll <- lapply(xx, svdPartial)
       X <- Reduce(cbind,ll)
@@ -65,7 +65,7 @@ blockSVD <- function(x, ncomponents=2, mc.cores=2,
     else{
       p <- ncol(x)
       cols <- seq(1,p,1)
-      index <- split(cols, cut(cols,breaks=mc.cores))
+      index <- split(cols, cut(cols,breaks=parts))
       xx <- lapply(index, function(v,index) v[,index], v=x) 
       ll <- lapply(xx, svdPartial)
       X <- Reduce(cbind,ll)

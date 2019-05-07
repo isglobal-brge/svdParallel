@@ -18,9 +18,9 @@ getPCA <- function(x, center = TRUE, scale = TRUE,
                    method = "blockSVD",
                    tol=.Machine$double.eps, ...){
   
-  method.pca <- charmatch(method, c("blockSVD", "generalBlockSVD", "Jacobi", "JacobiR"))
+  method.pca <- charmatch(method, c("blockSVD", "generalBlockSVD", "Jacobi", "JacobiR", "parBlock", "parGeneral"))
   if (is.na(method.pca))
-    stop("type must be 'blockSVD', 'generalBlockSVD', 'Jacobi' or 'JacobiR'")
+    stop("type must be 'blockSVD', 'generalBlockSVD', 'Jacobi', 'JacobiR', 'parBlock', 'parGeneral'")
   
   if(is.list(x) && !is.data.frame(x)){
     if(method.pca == 1){
@@ -73,6 +73,12 @@ getPCA <- function(x, center = TRUE, scale = TRUE,
   }
   if (method.pca==4) {
     svdX <- svdJacobiR(x.norm, ...)
+  }
+  if (method.pca==5) {
+    svdX <- parBlockSVD(x.norm, ...)
+  }
+  if (method.pca==6) {
+    svdX <- parGeneralBlockSVD(x.norm, ...)
   }
  
   #------------ Variables ----------------#

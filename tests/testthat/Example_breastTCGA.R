@@ -2,14 +2,13 @@
 # Variable under study 'breast_carcinoma_estrogen_receptor_status'.
 # We are interested in which genes relate to the positive and negative strogen receptor.
 
-BiocManager::install("Biobase", version = "3.8")
+
 library(Biobase)
-BiocManager::install("made4", version = "3.8")
 library(made4)
+library(brgedata)
+library(MultiDataSet)
 
-
-
-data(breastMulti, package="brgedata")
+load("data/breastMulti.rda")
 breastTCGA <- breastMulti[["expression"]]
 breastTCGA
 
@@ -24,23 +23,28 @@ library(FactoMineR)
 res_pca <- PCA(t(genes))
 plot(res_pca)
 
+library(made4)
 group<-as.factor(breastTCGA$ER.Status)
 out <- ord(genes, classvec=group, type = "pca")
 plot(out, nlab=3)
 plotarrays(out)
-
+par(mfrow=c(1,1))
 
 
 gpca <- getPCA(t(genes), mc.cores = 5, center=T, scale=T)
 plot(gpca, type="individuals")
 
-microbenchmark::microbenchmark(getPCA(t(genes), mc.cores = 5, center=F, scale=F),
-                               getPCA(t(genes), mc.cores = 10, center=F, scale=F),
-                               PCA(t(genes), graph=FALSE))
+plot(gpca$Y[group=="Positive",c(1,2)], main="Individuals",
+     type="p", col="blue",xlab="PC1 (17.84%)", ylab="PC2 (7.61%)", xlim=c(-60,70), ylim=c(-70,60))
+points(gpca$Y[group=="Negative",c(1,2)], col="red")
+abline(a=0,b=0, lty=3)
+abline(v=0, lty=3)
+legend("topright", legend = c("Positve", "Negative"), col=c("blue", "red"), pch=1, cex=0.75)
 
 
-positive <- pheno$breast_carcinoma_estrogen_receptor_status == "Positive"  
-negative <- pheno$breast_carcinoma_estrogen_receptor_status == "Negative"
-plot(gpca$Y[positive,c(1,2)], main="Individuals",
-       type="p", col="blue",xlab="PC1", ylab="PC2")
-points(gpca$Y[negative,c(1,2)], col="red")
+microbenchmark::microbenchmark("getPCA2"=getPCA(t(genes), mc.cores = 2, center=F, scale=F),
+                               "getPCA5"=getPCA(t(genes), mc.cores = 5, center=F, scale=F),
+                               "getPCA7"=getPCA(t(genes), mc.cores = 7, center=F, scale=F),
+                               "getPCA10"=getPCA(t(genes), mc.cores = 10, center=F, scale=F),
+                               "PCA"=PCA(t(genes), graph=FALSE), 
+                               "ord" = ord(genes, classvec=group, type = "pca"), times=50)
