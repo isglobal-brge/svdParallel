@@ -1,0 +1,294 @@
+---
+title: "Parallel functions for Singular Value Decomposition"
+author: 
+- name: Claudia Serrano 
+  affiliation: 
+  - &uab Autonomous University of Barcelona (UAB)
+  - &isglobal ISGlobal, Centre for Research in Environmental Epidemiology (CREAL)
+  - &brge Bioinformatics Research Group in Epidemiolgy (BRGE)
+- name: Juan R. Gonzalez
+  affiliation: 
+  - *isglobal
+  - *brge
+  - *uab
+  email: juanr.gonzalez@isglobal.org
+date: "`r Sys.Date()`"
+package: "svdParallel"
+
+references:
+- id: ref
+  title: A distributed and incremental svd algorithm for agglomerative dataanalysis on large networks
+  author: 
+   - family: Iwen
+     given: Mark
+   - family: Ong
+     given: Benjamin
+  issued:
+    year: 2016
+
+
+
+vignette: >
+  %\VignetteIndexEntry{Parallel functions for Singular Value Decomposition}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "", 
+                      cache=TRUE, message = FALSE, fig.height=4, fig.width=4, fig.align= "center"
+)
+```
+
+# Purpose of this package
+
+The aim of this package is to provide functions that compute the Singular Value Decomposition of large matrices and perform a Principal Component Analysis when we do not have access to the whole dataset, as in DataSHIELD /footnote{http://www.datashield.ac.uk/}. At the same time, we are interested in the high computational cost that computing a SVD has, so we present some functions that calculate SVD's and PCA's in a more efficient way. The functions in this package can be classified in two different blocks: Jacobi algorithm and Block algorithm. The first group contains functions that perform a SVD using functions that apply the two sided Jacobi algorithm. This is an iterative algorithm that is also parallelizable and could perform well with large datasets and multi cores processors. However, it cannot be applied to DataSHIELD. The second group uses an incremental algorithm that we call Block method and consists of partitioning the matrix under study in submatrices in order to reduce their dimension and compute the SVD faster. This is applicable to DataSHIELD.
+
+The Block method allows us to compute a PCA of different datasets without being able to join them. However, to do so we need that each dataset contains the same variables and a greater number of individuals than variables. This usually happens in most of the datasets. Nevertheless this is not the case for omic data. In this case, Block functions will not be useful for DataSHIELD but they will be good to perform efficient calculations in large datasets.  
+
+
+# Getting started
+
+First, we need to load the required packages.
+
+```{r load_packages}
+library(FactoMineR)
+library(irlba)
+library(doParallel)
+library(devtools)
+library(Biobase)
+library(MultiDataSet)
+library(made4)
+library(brgedata)
+library(parallel)
+library(SummarizedExperiment)
+```
+
+Then, you can install `svdParallel` from Github by typing and then load it as usual.
+
+
+```{r load_svdParallel, include=FALSE }
+devtools::install_github("isglobal-brge/svdParallel")
+library(svdParallel)
+```
+
+In the following sections of this document we will present some examples in order to make clear how the different functions work. To do so we will use three datasets: `iris`, `breast` and `breastTCGA`. The `iris` dataset is an R dataset and the other two, `breast` and `breastTCGA`, are saved in the data folder of this project, so you can access and manipulate all of them. 
+
+# Computing a PCA using Jacobi algorithm
+
+In this case we will use the `iris` dataset. We can see the head of this dataset as follows
+
+```{r iris1}
+head(iris)
+```
+
+We need to remove the last column because it is a categorical variable that we are not able to use in a PCA. We will use it later to analyze the results. 
+
+```{r iris2}
+head(iris$Species)
+
+i <- iris[,-5]
+```
+
+The function that performs a PCA is `getPCA` and we have to set the method that we want to use to compute this PCA. The default method is the Block method, so if we want to compute the PCA using the Jacobi method we need to specify it. After computing a PCA with `getPCA` we can use function `print` to see the main values obtained with the PCA, the variance of each component and the percentage of variance explained. 
+
+
+```{r iris3}
+gJ <- getPCA(i,method="Jacobi")
+print(gJ)
+```
+
+
+Now, we can plot the results using function `plot`. We need to specify what type of plot we want, individuals or variables. Moreover, if we do not specify anything more the plot will be made in the first two principal components.
+```{r,echo=TRUE, fig.width=7, fig.height=4,fig.show='hold'}
+par(mfrow=c(1,2))
+plot(gJ, type="variables")
+plot(gJ, type="individuals")
+```
+
+If we want the plots in other components we can do it by adding `comps=c(i,j)`, where i and j are the new components.  
+
+```{r,echo=TRUE, fig.width=7, fig.height=4,fig.show='hold',fig.align='center'}
+par(mfrow=c(1,2))
+plot(gJ, type="variables", comps=c(1,3))
+plot(gJ, type="individuals", comps=c(1,3))
+```
+
+The `getPCA` function returns a list of different variables that we can use to perform a deeper analysis of the data. This variables are the coordinates of the variables, the Y matrix containing the coordinates of the individuals, the variance and percentage of variance explained by each component, the V matrix of the SVD performed and the method used. 
+
+In order to access to this variables we can do
+
+```{r iris6}
+gJ$varcoord
+```
+
+For instance, we can use the Y matrix with the coordinates of the individuals to represent them according to the species they belong:
+
+```{r iris7}
+setosa <- iris$Species == "setosa"  
+versicolor <- iris$Species == "versicolor"
+virginica <- iris$Species == "virginica"
+plot(gJ$Y[setosa,c(1,2)], main="Individuals",
+     type="p", col="blue",xlab="PC1 (72.96%)", ylab="PC2 (22.85%)", xlim=c(-4,5.5))
+points(gJ$Y[versicolor,c(1,2)], col="red")
+points(gJ$Y[virginica,c(1,2)], col="green")
+legend("bottomright", legend = c("Setosa", "Versicolor", "Virginica"), col=c("blue", "red", "green"), pch=1, cex=0.75)
+```
+
+As we can see, the individuals are classified according to the species. 
+
+
+we can perform the same calculations using `JacobiR` method. This method is not parallelizable and it is faster than `Jacobi`. We would recommend using `JacobiR` when we do not deal with big matrices and we do not need to parallelize. However, in small matrices the difference is not significant. 
+
+The functions that contain the Jacobi algorithm are `Jacobi`, `JacobiR` and `parJacobi` and they compute the eigenvalues and eigenvectores of a real symmetric matrix using the two-sided Jacobi algorithm. Functions `svdJacobi` and `svdJacobiR` compute a SVD of a real rectangular matrix and returns the left and right singular vectors and the singular values. 
+
+
+
+```{r iris8}
+svdJ <- svdJacobi(i)
+svdJ$d
+```
+
+We have obtained the singular values of the iris dataset. 
+
+As these functions use an iterative method we need to set a tolerance. The value set by default is the tolerance of the machine, but it can be changed setting the `tol` parameter. 
+
+
+# Computing a PCA using Block method for DataSHIELD.
+
+In this case we will also use `getPCA` function but we will specify a different method. If we want to simulate that we are in a DataSHIELD experiment and we cannot join the different datasets we can use a list containing the datasets. To do so, we will use `breast` dataset. We need to remove the categorical variables to be able to work with the numerical ones. 
+
+
+```{r breast1}
+breast[1:5,1:3]
+num_breast <- breast[,3:32]
+dim(num_breast)
+```
+
+As we can see, the dimension of the dataset is 569 x 29. We can create three datasets taking the first 200 individuals, the individuals in rows between 201 and 400 and the last individuals from 401 to 569. These datasets have the same variables and have more individuals than variables. We can use the Block method to compute the SVD. To do so, we create a list containing these three datasets and we use `getPCA` function. In this case, we do not need to specify the method because the Block method is by default. It is also important that the `getPCA` function has the option to center and scale the data. By default the function will do it, but we can choose not do so. 
+
+
+```{r breast2}
+data1 <- num_breast[1:200,]
+data2 <- num_breast[201:400,]
+data3 <- num_breast[401:569,]
+
+data_l <- list(data1,data2,data3)
+
+gpcaL <- getPCA(data_l)
+```
+
+
+Now we can plot the variables and the individuals again
+
+```{r breast3, fig.width=7, fig.height=4,fig.show='hold'}
+par(mfrow=c(1,2))
+plot(gpcaL)
+plot(gpcaL, type="individuals")
+```
+
+And we can also classify them according to the diagnosis of the tumor: benign or malignant. 
+
+```{r breast4}
+m <- breast[,2] =="M"
+b <- breast[,2] =="B"
+plot(gpcaL$Y[m,c(1,2)], main="Individuals",
+     type="p", col="blue",xlab="PC1 (44.27%)", ylab="PC2(18.97%)", xlim=c(-18,12), ylim=c(-14,9))
+points(gpcaL$Y[b,c(1,2)], col="red")
+abline(a=0,b=0, lty=3)
+abline(v=0, lty=3)
+legend("topright", legend = c("Malignant", "Benign"), col=c("blue", "red"), pch=1, cex=0.75)
+```
+
+We have been able to compute a PCA of three datasets together without merging them. This means that this function would be applicable to DataSHIELD experiments. 
+
+
+
+# Computing a PCA using Block method for omic data. 
+
+In this case we will use a larger dataset with omic data. We will use a `SummarizedExperiment` called `breastMulti` that contains a `RangeSummarizedExperiment` called `breastTCGA`.  
+```{r breastTCGA1}
+breastTCGA <- breastMulti[["expression"]]
+breastTCGA
+```
+
+We can extract the dataset containing the genes information using `assay` function. There are 8362 variables and 79 individuals.
+```{r breastTCGA2}
+genes <- assay(breastTCGA)
+dim(genes)
+genes[1:5,1:12]
+```
+
+As this dataset contains omic data the individuals are in columns and the variables are in rows. This is not the normal way to build datasets and our functions require the individuals to be in the rows and the variables in the columns. This means that we need to apply `getPCA` to the transpose of the `genes` dataset. Moreover, the Block method has a parameter called `parts`. This parameter sets the number of subdatasets to be created from the dataset under study. The default value is 2. If n is the number of rows and p is the number of columns of our dataset, this number `parts` cannot be greater than max(n,p). We can write to set `parts=5`.  
+
+```{r breastTCGA3}
+gpca <- getPCA(t(genes), parts = 5, center=T, scale=T)
+plot(gpca, type="individuals")
+```
+
+In this case we will not plot the variables because there are too many and the resulting plot is not interpretable. 
+
+In the individuals plot  we can see two differentiated groups. These groups correspond to the estrongen status, that can be positive or negative. 
+
+```{r breastTCGA4}
+group<-as.factor(breastTCGA$ER.Status)
+plot(gpca$Y[group=="Positive",c(1,2)], main="Individuals",
+       type="p", col="blue",xlab="PC1 (17.84%)", ylab="PC2 (7.61%)", xlim=c(-60,70), ylim=c(-70,60))
+points(gpca$Y[group=="Negative",c(1,2)], col="red")
+abline(a=0,b=0, lty=3)
+abline(v=0, lty=3)
+legend("topright", legend = c("Positve", "Negative"), col=c("blue", "red"), pch=1, cex=0.75)
+```
+
+There exist specific functions to compute a PCA on gene expression data. This is the case of function `ord`. We can see that we obtain similar results.  
+
+```{r breastTCGA5, fig.height=5, fig.width=5, fig.align= "center"}
+group<-as.factor(breastTCGA$ER.Status)
+out <- ord(genes, classvec=group, type = "pca")
+plot(out, nlab=3)
+plotarrays(out)
+par(mfrow=c(1,1))
+```
+
+Apart from method `blockSVD` there is another method called `generalBlockSVD`. This method is the generalization from the previous one in a multi level algorithm. In order to use it we can set the parameters `k` and `q`. Their default values are 2 and 1, respectively. Parameter `q` sets the number of levels of the algorithm (how many times we will repeat the process), and `k` sets the number of subdatasets to be concatenated at each level. More information about the method can be found at [@ref].
+
+We can see that the same results can be obtained using this method:
+
+```{r breastTCGA6}
+gpca <- getPCA(t(genes),  method="generalBlockSVD", k=2, q=2)
+plot(gpca, type="individuals")
+```
+
+Finally we can compare the different functions performance using the function `microbenchmark`. It computes the computation time of the functions and returns a table with the results. 
+
+
+```{r breastTCGA7}
+microbenchmark::microbenchmark("getPCA2"=getPCA(t(genes), parts = 2, center=F, scale=F),
+                               "getPCA5"=getPCA(t(genes), parts = 5, center=F, scale=F),
+                               "getPCA22"=getPCA(t(genes), method="generalBlockSVD", k=2, q=2, center=F, scale=F),
+                               "getPCA32"=getPCA(t(genes), method="generalBlockSVD", k=3, q=2, center=F, scale=F),
+                               "PCA"=PCA(t(genes), graph=FALSE), 
+                               "ord" = ord(genes, classvec=group, type = "pca"), times=10)
+```
+
+
+If we look at the mean column we can see that the `PCA` function is the one that last more in average. This can be explained because this function computes a lot of different values a part from the necessary ones to compute a basic PCA. This also happens with function `ord`. These functions compute other scores and it makes it difficult to compare them with the others. The best way to analyze our functions' performance is to compare it to the function `getPCA0`. This function computes a basic PCA using only one SVD of the whole matrix. Our `getPCA` functions are faster in this case than `PCA` and `ord`, but it does not necessarily mean that they are more efficient. 
+
+```{r breastTCGA8}
+microbenchmark::microbenchmark("getPCA2"=getPCA(t(genes), parts = 2, center=F, scale=F),
+                               "getPCA5"=getPCA(t(genes), parts = 5, center=F, scale=F),
+                               "getPCA22"=getPCA(t(genes), method="generalBlockSVD", k=2, q=2, center=F, scale=F),
+                               "getPCA32"=getPCA(t(genes), method="generalBlockSVD", k=3, q=2, center=F, scale=F),
+                               "getPCA0"=getPCA0(t(genes), center=F, scale=F),  times=10)
+```
+
+The size of the `genes` dataset is not very big so the differences between the different functions are not significant. The performance of the Block method gets better when the size of the dataset increases. 
+
+When the size of the dataset is really large, we should use the parallel version of the two methods: `parBlockSVD` and `parGeneralBlockSVD`. They work as `blockSVD` and `generalBlokSVD`, respectively. 
+
+# References 

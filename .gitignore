@@ -7,3 +7,4 @@ vignettes/.Rhistory
 svdParallel.Rproj
 
 */*cache
+inst/doc
