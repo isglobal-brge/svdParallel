@@ -17,7 +17,7 @@ package: "svdParallel"
 
 references:
 - id: ref
-  title: A distributed and incremental svd algorithm for agglomerative dataanalysis on large networks
+  title: A distributed and incremental svd algorithm for agglomerative data analysis on large networks
   author: 
    - family: Iwen
      given: Mark
