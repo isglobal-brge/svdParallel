@@ -1,5 +1,5 @@
 ---
-title: "Parallel functions for Singular Value Decomposition"
+title: "Singular Value Decomposition for Federated Data"
 author: 
 - name: Claudia Serrano 
   affiliation: 
@@ -13,7 +13,13 @@ author:
   - *uab
   email: juanr.gonzalez@isglobal.org
 date: "`r Sys.Date()`"
-package: "svdParallel"
+package: "`r pkg_ver('BigDataStatMeth')`"
+output: 
+  BiocStyle::html_document:
+    number_sections: true
+    toc: yes
+    fig_caption: yes
+    toc_float: true
 
 references:
 - id: ref
@@ -25,8 +31,6 @@ references:
      given: Benjamin
   issued:
     year: 2016
-
-
 
 vignette: >
   %\VignetteIndexEntry{Parallel functions for Singular Value Decomposition}
@@ -41,7 +45,10 @@ text-align: justify}
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "", 
-                      cache=TRUE, message = FALSE, fig.height=4, fig.width=4, fig.align= "center"
+                      cache=TRUE, message = FALSE,
+                      warning = FALSE,
+                      fig.height=4, fig.width=4, 
+                      fig.align= "center"
 )
 ```
 
@@ -54,9 +61,17 @@ The Block method allows us to compute a PCA of different datasets without being 
 
 # Getting started
 
-First, we need to load the required packages.
+
+First, you can install `svdParallel` from Github by typing 
+
+```{r load_svdParallel, eval=FALSE}
+devtools::install_github("isglobal-brge/svdParallel")
+```
+
+Then, you can load the required packages to reproduce this document.
 
 ```{r load_packages}
+library(svdParallel)
 library(FactoMineR)
 library(irlba)
 library(doParallel)
@@ -69,13 +84,6 @@ library(parallel)
 library(SummarizedExperiment)
 ```
 
-Then, you can install `svdParallel` from Github by typing and then load it as usual.
-
-
-```{r load_svdParallel, include=FALSE }
-devtools::install_github("isglobal-brge/svdParallel")
-library(svdParallel)
-```
 
 In the following sections of this document we will present some examples in order to make clear how the different functions work. To do so we will use three datasets: `iris`, `breast` and `breastTCGA`. The `iris` dataset is an R dataset and the other two, `breast` and `breastTCGA`, are saved in the data folder of this project, so you can access and manipulate all of them. 
 

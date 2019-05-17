@@ -8,3 +8,8 @@ svdParallel.Rproj
 
 */*cache
 inst/doc
+
+*/*_files
+*.html
+
+*.R
