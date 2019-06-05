@@ -13,7 +13,7 @@ author:
   - *uab
   email: juanr.gonzalez@isglobal.org
 date: "`r Sys.Date()`"
-package: "`r pkg_ver('BigDataStatMeth')`"
+package: "`r pkg_ver('svdParallel')`"
 output: 
   BiocStyle::html_document:
     number_sections: true
