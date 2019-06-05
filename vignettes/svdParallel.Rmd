@@ -47,7 +47,7 @@ text-align: justify}
 knitr::opts_chunk$set(collapse = TRUE, comment = "", 
                       cache=TRUE, message = FALSE,
                       warning = FALSE,
-                      fig.height=4, fig.width=4, 
+                      fig.height=6, fig.width=6, 
                       fig.align= "center"
 )
 ```
@@ -113,7 +113,7 @@ print(gJ)
 
 
 Now, we can plot the results using function `plot`. We need to specify what type of plot we want, individuals or variables. Moreover, if we do not specify anything more the plot will be made in the first two principal components.
-```{r,echo=TRUE, fig.width=7, fig.height=4,fig.show='hold'}
+```{r,echo=TRUE, fig.width=7, fig.height=4,fig.show='hold', fig.align='center', fig.cap="Plot of the variables (left) and individuals (right) using getPCA function."}
 par(mfrow=c(1,2))
 plot(gJ, type="variables")
 plot(gJ, type="individuals")
@@ -121,7 +121,7 @@ plot(gJ, type="individuals")
 
 If we want the plots in other components we can do it by adding `comps=c(i,j)`, where i and j are the new components.  
 
-```{r,echo=TRUE, fig.width=7, fig.height=4,fig.show='hold',fig.align='center'}
+```{r,echo=TRUE, fig.width=7, fig.height=4,fig.show='hold',fig.align='center', fig.cap="Plot of the variables (left) and individuals (right) in the first and third components."}
 par(mfrow=c(1,2))
 plot(gJ, type="variables", comps=c(1,3))
 plot(gJ, type="individuals", comps=c(1,3))
@@ -137,7 +137,8 @@ gJ$varcoord
 
 For instance, we can use the Y matrix with the coordinates of the individuals to represent them according to the species they belong:
 
-```{r iris7}
+```{r iris7, fig.show='hold',fig.align='center',fig.cap="Plot of the individuals of the iris dataset according to the species they belong."}
+par(mfrow=c(1,1))
 setosa <- iris$Species == "setosa"  
 versicolor <- iris$Species == "versicolor"
 virginica <- iris$Species == "virginica"
@@ -178,8 +179,14 @@ num_breast <- breast[,3:32]
 dim(num_breast)
 ```
 
-As we can see, the dimension of the dataset is 569 x 29. We can create three datasets taking the first 200 individuals, the individuals in rows between 201 and 400 and the last individuals from 401 to 569. These datasets have the same variables and have more individuals than variables. We can use the Block method to compute the SVD. To do so, we create a list containing these three datasets and we use `getPCA` function. In this case, we do not need to specify the method because the Block method is by default. It is also important that the `getPCA` function has the option to center and scale the data. By default the function will do it, but we can choose not do so. 
+As we can see, the dimension of the dataset is 569 x 29. We can create three datasets taking the first 200 individuals, the individuals in rows between 201 and 400 and the last individuals from 401 to 569. These datasets have the same variables and have more individuals than variables. We can use the Block method to compute the SVD. This method computes a SVD of each of the subsets and then joins the results to compute a SVD again. In the following figure we can see a flowchart of the procedure:
 
+
+```{r breast1c, echo=FALSE, fig.cap="Flowchart of the Block method procedure."}
+knitr::include_graphics("esquema_exemple1.PNG")
+```
+
+To do so, we create a list containing these three datasets and we use `getPCA` function. In this case, we do not need to specify the method because the Block method is by default. It is also important that the `getPCA` function has the option to center and scale the data. By default the function will do it, but we can choose not do so. 
 
 ```{r breast2}
 data1 <- num_breast[1:200,]
@@ -191,18 +198,29 @@ data_l <- list(data1,data2,data3)
 gpcaL <- getPCA(data_l)
 ```
 
-
 Now we can plot the variables and the individuals again
 
-```{r breast3, fig.width=7, fig.height=4,fig.show='hold'}
+```{r breast3, fig.width=7, fig.height=4,fig.show='hold', fig.cap="Plot of the variables (left) and individuals (right) of the breast data in the first two principal components."}
 par(mfrow=c(1,2))
 plot(gpcaL)
 plot(gpcaL, type="individuals")
 ```
 
-And we can also classify them according to the diagnosis of the tumor: benign or malignant. 
 
-```{r breast4}
+We can compare the results obtained with function getPCA with other functions in other R packages. IN the following plots we can see the results using `PCA` function in [FactoMineR](https://www.rdocumentation.org/packages/FactoMineR) package. 
+
+```{r breast2b, fig.width=7, fig.height=4,fig.show='hold', fig.cap="Plot of the variables (left) and individuals (right) of the breast data using PCA function."}
+pcaR <- PCA(num_breast, graph=FALSE)
+par(mfrow=c(1,2))
+plot(pcaR, choix="var", label="none")
+plot(pcaR, choix="ind", label="none")
+```
+
+The results do not match exactly. However, we can appreciate that these two plots are the two previous ones rotated 180º. This means that they are the same plots but using the opposite direction of the principal components. As we know, the principal components are not uniquely defined as we can take `u` or `-u` and they both would be a principal component. Therefore, the results are coherent. 
+
+Now we can also classify them according to the diagnosis of the tumor: benign or malignant. 
+
+```{r breast4, fig.show='hold', fig.align='center', fig.cap = "Plot of the individuals according to the group they belong (benign or malignant cancer)"}
 m <- breast[,2] =="M"
 b <- breast[,2] =="B"
 plot(gpcaL$Y[m,c(1,2)], main="Individuals",
@@ -219,7 +237,8 @@ We have been able to compute a PCA of three datasets together without merging th
 
 # Computing a PCA using Block method for omic data. 
 
-In this case we will use a larger dataset with omic data. We will use a `SummarizedExperiment` called `breastMulti` that contains a `RangeSummarizedExperiment` called `breastTCGA`.  
+In this case we will use a larger dataset with omic data. We will use a [SummarizedExperiment](https://www.rdocumentation.org/packages/SummarizedExperiment) called `breastMulti` that contains a [RangeSummarizedExperiment](https://www.rdocumentation.org/packages/SummarizedExperiment/versions/1.2.3/topics/RangedSummarizedExperiment-class) called `breastTCGA`.  
+
 ```{r breastTCGA1}
 breastTCGA <- breastMulti[["expression"]]
 breastTCGA
@@ -234,7 +253,7 @@ genes[1:5,1:12]
 
 As this dataset contains omic data the individuals are in columns and the variables are in rows. This is not the normal way to build datasets and our functions require the individuals to be in the rows and the variables in the columns. This means that we need to apply `getPCA` to the transpose of the `genes` dataset. Moreover, the Block method has a parameter called `parts`. This parameter sets the number of subdatasets to be created from the dataset under study. The default value is 2. If n is the number of rows and p is the number of columns of our dataset, this number `parts` cannot be greater than max(n,p). We can write to set `parts=5`.  
 
-```{r breastTCGA3}
+```{r breastTCGA3,fig.show='hold',fig.align='center', fig.cap = "Plot of the individuals in the first 2 principal components of breastTCGA data."}
 gpca <- getPCA(t(genes), parts = 5, center=T, scale=T)
 plot(gpca, type="individuals")
 ```
@@ -243,7 +262,7 @@ In this case we will not plot the variables because there are too many and the r
 
 In the individuals plot  we can see two differentiated groups. These groups correspond to the estrongen status, that can be positive or negative. 
 
-```{r breastTCGA4}
+```{r breastTCGA4,fig.show='hold',fig.align='center',fig.cap = "Plot of the individuals classified according to their estrongen status."}
 group<-as.factor(breastTCGA$ER.Status)
 plot(gpca$Y[group=="Positive",c(1,2)], main="Individuals",
        type="p", col="blue",xlab="PC1 (17.84%)", ylab="PC2 (7.61%)", xlim=c(-60,70), ylim=c(-70,60))
@@ -255,7 +274,7 @@ legend("topright", legend = c("Positve", "Negative"), col=c("blue", "red"), pch=
 
 There exist specific functions to compute a PCA on gene expression data. This is the case of function `ord`. We can see that we obtain similar results.  
 
-```{r breastTCGA5, fig.height=5, fig.width=5, fig.align= "center"}
+```{r breastTCGA5, fig.show="hold",fig.align= "center", fig.cap="Output of function 'ord' applied to the breastTCGA dataset"}
 group<-as.factor(breastTCGA$ER.Status)
 out <- ord(genes, classvec=group, type = "pca")
 plot(out, nlab=3)
@@ -267,9 +286,14 @@ Apart from method `blockSVD` there is another method called `generalBlockSVD`. T
 
 We can see that the same results can be obtained using this method:
 
-```{r breastTCGA6}
+```{r breastTCGA6, fig.show='hold', fig.align='center', fig.cap="Plot of the individuals in the first 2 principal components of breastTCGA data using 'generalBlockSVD'."}
 gpca <- getPCA(t(genes),  method="generalBlockSVD", k=2, q=2)
-plot(gpca, type="individuals")
+plot(gpca$Y[group=="Positive",c(1,2)], main="Individuals",
+       type="p", col="blue",xlab="PC1 (17.84%)", ylab="PC2 (7.61%)", xlim=c(-60,70), ylim=c(-70,60))
+points(gpca$Y[group=="Negative",c(1,2)], col="red")
+abline(a=0,b=0, lty=3)
+abline(v=0, lty=3)
+legend("topright", legend = c("Positve", "Negative"), col=c("blue", "red"), pch=1, cex=0.75)
 ```
 
 Finally we can compare the different functions performance using the function `microbenchmark`. It computes the computation time of the functions and returns a table with the results. 
