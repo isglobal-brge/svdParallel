@@ -48,6 +48,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "",
 ```
 
 # Purpose of this package
+Analyzing data across hospitals and institutions without the data leaving the hospitals and adding institutions to a trusted network is an important part of privacy preserving data analysis. In order to assure all of this we can use DataSHIELD, an open source solution that let researchers analyze microdata without physically sharing this data with them. It allows a standardized, monitored, indirect and secure access to data.
 
 The aim of this package is to provide functions that compute the Singular Value Decomposition of large matrices and perform a Principal Component Analysis when we do not have access to the whole dataset, as in DataSHIELD /footnote{http://www.datashield.ac.uk/}. At the same time, we are interested in the high computational cost that computing a SVD has, so we present some functions that calculate SVD's and PCA's in a more efficient way. The functions in this package can be classified in two different blocks: Jacobi algorithm and Block algorithm. The first group contains functions that perform a SVD using functions that apply the two sided Jacobi algorithm. This is an iterative algorithm that is also parallelizable and could perform well with large datasets and multi cores processors. However, it cannot be applied to DataSHIELD. The second group uses an incremental algorithm that we call Block method and consists of partitioning the matrix under study in submatrices in order to reduce their dimension and compute the SVD faster. This is applicable to DataSHIELD.
 
@@ -109,7 +110,7 @@ print(gJ)
 
 Now, we can plot the results using function `plot`. We need to specify what type of plot we want, individuals or variables. Moreover, if we do not specify anything more the plot will be made in the first two principal components.
 
-```{r,echo=TRUE, fig.width=9, fig.height=5.5, fig.show='hold', fig.align='center', fig.cap="Variables and individuals projections from getPCA function. Left plot shows the variables in to the two first principal componets, while right plot correspondons to the individuals."}
+```{r,echo=TRUE, fig.width=9, fig.height=5.5, fig.show='hold', fig.align='center', fig.cap="Variables and individuals projections from getPCA function using Jacobi method. Left plot shows the variables in to the two first principal components, while right plot corresponds to the individuals."}
 par(mfrow=c(1,2))
 plot(gJ, type="variables")
 plot(gJ, type="individuals")
@@ -117,7 +118,7 @@ plot(gJ, type="individuals")
 
 If we want the plots in other components we can do it by adding `comps=c(i,j)`, where i and j are the new components.  
 
-```{r,echo=TRUE, fig.width=9, fig.height=5.5, fig.show='hold',fig.align='center', fig.cap="Variables and individuals projections from getPCA function. Left plot shows the variables in to the first and third first principal componets, while right plot correspondons to the individuals."}
+```{r,echo=TRUE, fig.width=9, fig.height=5.5, fig.show='hold',fig.align='center', fig.cap="Variables and individuals projections from getPCA function using Jacobi method. Left plot shows the variables into the first and third first principal components, while right plot corresponds to the individuals."}
 par(mfrow=c(1,2))
 plot(gJ, type="variables", comps=c(1,3))
 plot(gJ, type="individuals", comps=c(1,3))
@@ -178,7 +179,7 @@ dim(num_breast)
 As we can see, the dimension of the dataset is 569 x 29. We can create three datasets taking the first 200 individuals, the individuals in rows between 201 and 400 and the last individuals from 401 to 569. These datasets have the same variables and have more individuals than variables. We can use the Block method to compute the SVD. This method computes a SVD of each of the subsets and then joins the results to compute a SVD again. In the following figure we can see a flowchart of the procedure:
 
 
-```{r breast1c, echo=FALSE, fig.cap="Flowchart of the Block method procedure.", out.width = "150%"}
+```{r breast1c, echo=FALSE, fig.cap="Flowchart of the Block method procedure. The SVD of each of the subdatasets is computed and after that, the results are joined to compute a SVD again. ", out.width = "150%"}
 knitr::include_graphics("esquema_exemple1.png")
 ```
 
@@ -196,7 +197,7 @@ gpcaL <- getPCA(data_l)
 
 Now we can plot the variables and the individuals again
 
-```{r breast3, fig.width=9, fig.height=5.5, fig.cap="Plot of the variables (left) and individuals (right) of the breast data in the first two principal components.", out.width = "30%"}
+```{r breast3, fig.width=9, fig.height=5.5, fig.cap="Variables and individuals projections from getPCA function using Block method. Left plot shows the variables into the two first principal components, while right plot corresponds to the individuals.", out.width = "30%"}
 par(mfrow=c(1,2))
 plot(gpcaL)
 plot(gpcaL, type="individuals")
@@ -205,7 +206,7 @@ plot(gpcaL, type="individuals")
 
 We can compare the results obtained with function getPCA with other functions in other R packages. IN the following plots we can see the results using `PCA` function in [FactoMineR](https://www.rdocumentation.org/packages/FactoMineR) package. 
 
-```{r breast2b, fig.width=9, fig.height=5.5, fig.show='hold', fig.cap="Plot of the variables (left) and individuals (right) of the breast data using PCA function."}
+```{r breast2b, fig.width=9, fig.height=5.5, fig.show='hold', fig.cap="Variables and individuals projections from PCA function. Left plot shows the variables into the two first principal components, while right plot corresponds to the individuals."}
 pcaR <- PCA(num_breast, graph=FALSE)
 par(mfrow=c(1,2))
 plot(pcaR, choix="var", label="none")
@@ -216,7 +217,7 @@ The results do not match exactly. However, we can appreciate that these two plot
 
 Now we can also classify them according to the diagnosis of the tumor: benign or malignant. 
 
-```{r breast4, fig.show='hold', fig.align='center', fig.cap = "Plot of the individuals according to the group they belong (benign or malignant cancer)"}
+```{r breast4, fig.show='hold', fig.align='center', fig.cap = "Principal components of breast dataset. The plot shows the samples according to the group they belong (benign or malignant cancer)"}
 m <- breast[,2] =="M"
 b <- breast[,2] =="B"
 plot(gpcaL$Y[m,c(1,2)], main="Individuals",
@@ -249,7 +250,7 @@ genes[1:5,1:12]
 
 As this dataset contains omic data the individuals are in columns and the variables are in rows. This is not the normal way to build datasets and our functions require the individuals to be in the rows and the variables in the columns. This means that we need to apply `getPCA` to the transpose of the `genes` dataset. Moreover, the Block method has a parameter called `parts`. This parameter sets the number of subdatasets to be created from the dataset under study. The default value is 2. If n is the number of rows and p is the number of columns of our dataset, this number `parts` cannot be greater than max(n,p). We can write to set `parts=5`.  
 
-```{r breastTCGA3,fig.show='hold',fig.align='center', fig.cap = "Plot of the individuals in the first 2 principal components of breastTCGA data."}
+```{r breastTCGA3,fig.show='hold',fig.align='center', fig.cap = "Individuals projections from getPCA function using Block method. The plot shows the individuals into the two first principal components"}
 gpca <- getPCA(t(genes), parts = 5, center=T, scale=T)
 plot(gpca, type="individuals")
 ```
@@ -258,7 +259,7 @@ In this case we will not plot the variables because there are too many and the r
 
 In the individuals plot  we can see two differentiated groups. These groups correspond to the estrongen status, that can be positive or negative. 
 
-```{r breastTCGA4,fig.show='hold',fig.align='center',fig.cap = "Plot of the individuals classified according to their estrongen status."}
+```{r breastTCGA4,fig.show='hold',fig.align='center',fig.cap = "Principal components of breastTCGA dataset. The plot shows the samples according to their estrongen status."}
 group<-as.factor(breastTCGA$ER.Status)
 plot(gpca$Y[group=="Positive",c(1,2)], main="Individuals",
        type="p", col="blue",xlab="PC1 (17.84%)", ylab="PC2 (7.61%)", xlim=c(-60,70), ylim=c(-70,60))
@@ -270,7 +271,7 @@ legend("topright", legend = c("Positve", "Negative"), col=c("blue", "red"), pch=
 
 There exist specific functions to compute a PCA on gene expression data. This is the case of function `ord`. We can see that we obtain similar results.  
 
-```{r breastTCGA5, fig.show="hold",fig.align= "center", fig.cap="Output of function 'ord' applied to the breastTCGA dataset"}
+```{r breastTCGA5, fig.show="hold",fig.align= "center", fig.cap="Variables and individuals projections from ord function. First, there is the plot of the eigenvalues. Then, the plot of the variables (top right) and the individuals (bottom left) in the first two principal components, and the individuals classified in groups."}
 group<-as.factor(breastTCGA$ER.Status)
 out <- ord(genes, classvec=group, type = "pca")
 plot(out, nlab=3)
@@ -282,7 +283,7 @@ Apart from method `blockSVD` there is another method called `generalBlockSVD`. T
 
 We can see that the same results can be obtained using this method:
 
-```{r breastTCGA6, fig.show='hold', fig.align='center', fig.cap="Plot of the individuals in the first 2 principal components of breastTCGA data using 'generalBlockSVD'."}
+```{r breastTCGA6, fig.show='hold', fig.align='center', fig.cap="Individuals projections from getPCA function using General Block method. The plot shows the individuals into the two first principal components classified according to their estrongen status."}
 gpca <- getPCA(t(genes),  method="generalBlockSVD", k=2, q=2)
 plot(gpca$Y[group=="Positive",c(1,2)], main="Individuals",
        type="p", col="blue",xlab="PC1 (17.84%)", ylab="PC2 (7.61%)", xlim=c(-60,70), ylim=c(-70,60))
@@ -295,24 +296,28 @@ legend("topright", legend = c("Positve", "Negative"), col=c("blue", "red"), pch=
 Finally we can compare the different functions performance using the function `microbenchmark`. It computes the computation time of the functions and returns a table with the results. 
 
 
-```{r breastTCGA7}
-microbenchmark::microbenchmark("getPCA2"=getPCA(t(genes), parts = 2, center=F, scale=F),
-                               "getPCA5"=getPCA(t(genes), parts = 5, center=F, scale=F),
-                               "getPCA22"=getPCA(t(genes), method="generalBlockSVD", k=2, q=2, center=F, scale=F),
-                               "getPCA32"=getPCA(t(genes), method="generalBlockSVD", k=3, q=2, center=F, scale=F),
-                               "PCA"=PCA(t(genes), graph=FALSE), 
-                               "ord" = ord(genes, classvec=group, type = "pca"), times=10)
+```{r breastTCGA7, fig.show='hold', fig.align='center', fig.cap="Boxplot of the computational times for different functions. The first two are using Block method and the following two are using General Block method. The 5th is unsing PCA function and the last one is using ord function."}
+mb <- microbenchmark::microbenchmark("Block method (k=2)"=getPCA(t(genes), parts = 2, center=F, scale=F),
+                               "Block method (k=5)"=getPCA(t(genes), parts = 5, center=F, scale=F),
+                               "General Block method (k=2, q=2)"=getPCA(t(genes), method="generalBlockSVD", k=2, q=2, center=F, scale=F),
+                               "General Block method (k=3, q=2)"=getPCA(t(genes), method="generalBlockSVD", k=3, q=2, center=F, scale=F),
+                               "PCA function"=PCA(t(genes), graph=FALSE), 
+                               "ord function" = ord(genes, classvec=group, type = "pca"), times=10)
+boxplot(mb, xaxt="n", xlab="")
+axis(1, labels=c("Block k=2", "Block k=5", "k=3 q=2", "k=3 q=2", "PCA", "ord"), at =1:6,las=2)
 ```
 
 
 If we look at the mean column we can see that the `PCA` function is the one that last more in average. This can be explained because this function computes a lot of different values a part from the necessary ones to compute a basic PCA. This also happens with function `ord`. These functions compute other scores and it makes it difficult to compare them with the others. The best way to analyze our functions' performance is to compare it to the function `getPCA0`. This function computes a basic PCA using only one SVD of the whole matrix. Our `getPCA` functions are faster in this case than `PCA` and `ord`, but it does not necessarily mean that they are more efficient. 
 
-```{r breastTCGA8}
-microbenchmark::microbenchmark("getPCA2"=getPCA(t(genes), parts = 2, center=F, scale=F),
-                               "getPCA5"=getPCA(t(genes), parts = 5, center=F, scale=F),
+```{r breastTCGA8, fig.show='hold', fig.align='center', fig.cap="Boxplot of the computational times for different functions. The first two are using Block method and the following two are using General Block method. The last one is using PCA0, it does not use any method."}
+mb2 <- microbenchmark::microbenchmark("Block method (k=2)"=getPCA(t(genes), parts = 2, center=F, scale=F),
+                               "Block method (k=5)"=getPCA(t(genes), parts = 5, center=F, scale=F),
                                "getPCA22"=getPCA(t(genes), method="generalBlockSVD", k=2, q=2, center=F, scale=F),
-                               "getPCA32"=getPCA(t(genes), method="generalBlockSVD", k=3, q=2, center=F, scale=F),
-                               "getPCA0"=getPCA0(t(genes), center=F, scale=F),  times=10)
+                               "General Block method (k=3, q=2)"=getPCA(t(genes), method="generalBlockSVD", k=3, q=2, center=F, scale=F),
+                               "PCA0 no method"=getPCA0(t(genes), center=F, scale=F),  times=10)
+boxplot(mb2, xaxt="n", xlab="")
+axis(1, labels=c("Block k=2", "Block k=5", "k=2 q=2","k=3 q=2", "PCA0"), at =1:5,las=2)
 ```
 
 The size of the `genes` dataset is not very big so the differences between the different functions are not significant. The performance of the Block method gets better when the size of the dataset increases. 
