@@ -197,7 +197,9 @@ gpcaL <- getPCA(data_l)
 
 Now we can plot the variables and the individuals again
 
+
 ```{r breast3, fig.width=9, fig.height=5.5, fig.cap="Variables and individuals projections from getPCA function using Block method. Left plot shows the variables into the two first principal components, while right plot corresponds to the individuals.", out.width = "30%"}
+
 par(mfrow=c(1,2))
 plot(gpcaL)
 plot(gpcaL, type="individuals")
