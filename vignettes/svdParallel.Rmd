@@ -4,7 +4,7 @@ author:
 - name: Claudia Serrano 
   affiliation: 
   - &uab Autonomous University of Barcelona (UAB)
-  - &isglobal ISGlobal, Centre for Research in Environmental Epidemiology (CREAL)
+  - &isglobal ISGlobal - Barcelona Institute for Global Health
   - &brge Bioinformatics Research Group in Epidemiolgy (BRGE)
 - name: Juan R. Gonzalez
   affiliation: 
@@ -50,7 +50,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "",
 # Purpose of this package
 Analyzing data across hospitals and institutions without the data leaving the hospitals and adding institutions to a trusted network is an important part of privacy preserving data analysis. In order to assure all of this we can use DataSHIELD, an open source solution that let researchers analyze microdata without physically sharing this data with them. It allows a standardized, monitored, indirect and secure access to data.
 
-The aim of this package is to provide functions that compute the Singular Value Decomposition of large matrices and perform a Principal Component Analysis when we do not have access to the whole dataset, as in DataSHIELD /footnote{http://www.datashield.ac.uk/}. At the same time, we are interested in the high computational cost that computing a SVD has, so we present some functions that calculate SVD's and PCA's in a more efficient way. The functions in this package can be classified in two different blocks: Jacobi algorithm and Block algorithm. The first group contains functions that perform a SVD using functions that apply the two sided Jacobi algorithm. This is an iterative algorithm that is also parallelizable and could perform well with large datasets and multi cores processors. However, it cannot be applied to DataSHIELD. The second group uses an incremental algorithm that we call Block method and consists of partitioning the matrix under study in submatrices in order to reduce their dimension and compute the SVD faster. This is applicable to DataSHIELD.
+The aim of this package is to provide functions that compute the Singular Value Decomposition of large matrices and perform a Principal Component Analysis when we do not have access to the whole dataset, as in DataSHIELD \footnote{http://www.datashield.ac.uk/}. At the same time, we are interested in the high computational cost that computing a SVD has, so we present some functions that calculate SVD's and PCA's in a more efficient way. The functions in this package can be classified in two different blocks: Jacobi algorithm and Block algorithm. The first group contains functions that perform a SVD using functions that apply the two sided Jacobi algorithm. This is an iterative algorithm that is also parallelizable and could perform well with large datasets and multi cores processors. However, it cannot be applied to DataSHIELD. The second group uses an incremental algorithm that we call Block method and consists of partitioning the matrix under study in submatrices in order to reduce their dimension and compute the SVD faster. This is applicable to DataSHIELD.
 
 The Block method allows us to compute a PCA of different datasets without being able to join them. However, to do so we need that each dataset contains the same variables and a greater number of individuals than variables. This usually happens in most of the datasets. Nevertheless this is not the case for omic data. In this case, Block functions will not be useful for DataSHIELD but they will be good to perform efficient calculations in large datasets.  
 
@@ -298,28 +298,27 @@ legend("topright", legend = c("Positve", "Negative"), col=c("blue", "red"), pch=
 Finally we can compare the different functions performance using the function `microbenchmark`. It computes the computation time of the functions and returns a table with the results. 
 
 
-```{r breastTCGA7, fig.show='hold', fig.align='center', fig.cap="Boxplot of the computational times for different functions. The first two are using Block method and the following two are using General Block method. The 5th is unsing PCA function and the last one is using ord function."}
+```{r breastTCGA7, fig.show='hold', fig.align='center', fig.cap="Boxplot of the computational times for different functions. The two in the bottom are done using Block method and the following two are using General Block method. The second has been done using PCA function and the first one is using ord function."}
 mb <- microbenchmark::microbenchmark("Block method (k=2)"=getPCA(t(genes), parts = 2, center=F, scale=F),
                                "Block method (k=5)"=getPCA(t(genes), parts = 5, center=F, scale=F),
                                "General Block method (k=2, q=2)"=getPCA(t(genes), method="generalBlockSVD", k=2, q=2, center=F, scale=F),
                                "General Block method (k=3, q=2)"=getPCA(t(genes), method="generalBlockSVD", k=3, q=2, center=F, scale=F),
                                "PCA function"=PCA(t(genes), graph=FALSE), 
                                "ord function" = ord(genes, classvec=group, type = "pca"), times=10)
-boxplot(mb, xaxt="n", xlab="")
-axis(1, labels=c("Block k=2", "Block k=5", "k=3 q=2", "k=3 q=2", "PCA", "ord"), at =1:6,las=2)
+ggplot2::autoplot(mb)
 ```
 
 
 If we look at the mean column we can see that the `PCA` function is the one that last more in average. This can be explained because this function computes a lot of different values a part from the necessary ones to compute a basic PCA. This also happens with function `ord`. These functions compute other scores and it makes it difficult to compare them with the others. The best way to analyze our functions' performance is to compare it to the function `getPCA0`. This function computes a basic PCA using only one SVD of the whole matrix. Our `getPCA` functions are faster in this case than `PCA` and `ord`, but it does not necessarily mean that they are more efficient. 
 
-```{r breastTCGA8, fig.show='hold', fig.align='center', fig.cap="Boxplot of the computational times for different functions. The first two are using Block method and the following two are using General Block method. The last one is using PCA0, it does not use any method."}
+```{r breastTCGA8, fig.show='hold', fig.align='center', fig.cap="Boxplot of the computational times for different functions. The two in the bottom are done using Block method and the following two have been done using General Block method. The one in the top is using PCA0, it does not use any method."}
 mb2 <- microbenchmark::microbenchmark("Block method (k=2)"=getPCA(t(genes), parts = 2, center=F, scale=F),
                                "Block method (k=5)"=getPCA(t(genes), parts = 5, center=F, scale=F),
-                               "getPCA22"=getPCA(t(genes), method="generalBlockSVD", k=2, q=2, center=F, scale=F),
+                               "General Block method (k=2, q=2)"=getPCA(t(genes), method="generalBlockSVD", k=2, q=2, center=F, scale=F),
                                "General Block method (k=3, q=2)"=getPCA(t(genes), method="generalBlockSVD", k=3, q=2, center=F, scale=F),
                                "PCA0 no method"=getPCA0(t(genes), center=F, scale=F),  times=10)
-boxplot(mb2, xaxt="n", xlab="")
-axis(1, labels=c("Block k=2", "Block k=5", "k=2 q=2","k=3 q=2", "PCA0"), at =1:5,las=2)
+
+ggplot2::autoplot(mb2)
 ```
 
 The size of the `genes` dataset is not very big so the differences between the different functions are not significant. The performance of the Block method gets better when the size of the dataset increases. 
