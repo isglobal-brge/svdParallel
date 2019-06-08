@@ -298,7 +298,7 @@ legend("topright", legend = c("Positve", "Negative"), col=c("blue", "red"), pch=
 Finally we can compare the different functions performance using the function `microbenchmark`. It computes the computation time of the functions and returns a table with the results. 
 
 
-```{r breastTCGA7, fig.show='hold', fig.align='center', fig.cap="Boxplot of the computational times for different functions. The two in the bottom are done using Block method and the following two are using General Block method. The second has been done using PCA function and the first one is using ord function."}
+```{r breastTCGA7, fig.show='hold', fig.align='center', fig.cap="Violinplot of the computational times for different functions. The two in the bottom are done using Block method and the following two are using General Block method. The second has been done using PCA function and the first one is using ord function."}
 mb <- microbenchmark::microbenchmark("Block method (k=2)"=getPCA(t(genes), parts = 2, center=F, scale=F),
                                "Block method (k=5)"=getPCA(t(genes), parts = 5, center=F, scale=F),
                                "General Block method (k=2, q=2)"=getPCA(t(genes), method="generalBlockSVD", k=2, q=2, center=F, scale=F),
@@ -311,7 +311,7 @@ ggplot2::autoplot(mb)
 
 If we look at the mean column we can see that the `PCA` function is the one that last more in average. This can be explained because this function computes a lot of different values a part from the necessary ones to compute a basic PCA. This also happens with function `ord`. These functions compute other scores and it makes it difficult to compare them with the others. The best way to analyze our functions' performance is to compare it to the function `getPCA0`. This function computes a basic PCA using only one SVD of the whole matrix. Our `getPCA` functions are faster in this case than `PCA` and `ord`, but it does not necessarily mean that they are more efficient. 
 
-```{r breastTCGA8, fig.show='hold', fig.align='center', fig.cap="Boxplot of the computational times for different functions. The two in the bottom are done using Block method and the following two have been done using General Block method. The one in the top is using PCA0, it does not use any method."}
+```{r breastTCGA8, fig.show='hold', fig.align='center', fig.cap="Violinplot of the computational times for different functions. The two in the bottom are done using Block method and the following two have been done using General Block method. The one in the top is using PCA0, it does not use any method."}
 mb2 <- microbenchmark::microbenchmark("Block method (k=2)"=getPCA(t(genes), parts = 2, center=F, scale=F),
                                "Block method (k=5)"=getPCA(t(genes), parts = 5, center=F, scale=F),
                                "General Block method (k=2, q=2)"=getPCA(t(genes), method="generalBlockSVD", k=2, q=2, center=F, scale=F),
