@@ -42,9 +42,12 @@ abline(v=0, lty=3)
 legend("topright", legend = c("Positve", "Negative"), col=c("blue", "red"), pch=1, cex=0.75)
 
 
-microbenchmark::microbenchmark("getPCA2"=getPCA(t(genes), mc.cores = 2, center=F, scale=F),
-                               "getPCA5"=getPCA(t(genes), mc.cores = 5, center=F, scale=F),
-                               "getPCA7"=getPCA(t(genes), mc.cores = 7, center=F, scale=F),
-                               "getPCA10"=getPCA(t(genes), mc.cores = 10, center=F, scale=F),
-                               "PCA"=PCA(t(genes), graph=FALSE), 
-                               "ord" = ord(genes, classvec=group, type = "pca"), times=50)
+mb <- microbenchmark::microbenchmark("Block method (k=2)"=getPCA(t(genes), parts = 2, center=F, scale=F),
+                                     "Block method (k=5)"=getPCA(t(genes), parts = 5, center=F, scale=F),
+                                     "Block method (k=7)"=getPCA(t(genes), parts = 7, center=F, scale=F),
+                                     "Block method (k=10)"=getPCA(t(genes), parts = 10, center=F, scale=F),
+                                     "PCA0 no method"=getPCA(t(genes), center=F, scale=F),
+                                     "PCA function"=PCA(t(genes), graph=FALSE), 
+                                     "ord function" = ord(genes, classvec=group, type = "pca"), times=10)
+
+ggplot2::autoplot(mb)
