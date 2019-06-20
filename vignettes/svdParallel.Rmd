@@ -326,3 +326,4 @@ The size of the `genes` dataset is not very big so the differences between the d
 When the size of the dataset is really large, we should use the parallel version of the two methods: `parBlockSVD` and `parGeneralBlockSVD`. They work as `blockSVD` and `generalBlokSVD`, respectively. 
 
 # References 
+
