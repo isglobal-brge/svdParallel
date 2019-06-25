@@ -6,6 +6,8 @@
 vignettes/.Rhistory
 svdParallel.Rproj
 *.log
+vignettes/*.tex
+*.zip
 
 */*cache
 inst/doc
