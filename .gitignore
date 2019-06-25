@@ -5,6 +5,7 @@
 .Rbuildignore
 vignettes/.Rhistory
 svdParallel.Rproj
+*.log
 
 */*cache
 inst/doc

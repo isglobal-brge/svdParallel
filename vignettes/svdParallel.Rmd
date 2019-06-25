@@ -15,11 +15,10 @@ author:
 date: "`r Sys.Date()`"
 package: "`r pkg_ver('svdParallel')`"
 output: 
-  BiocStyle::html_document:
+  BiocStyle::pdf_document:
     number_sections: true
     toc: yes
     fig_caption: yes
-    toc_float: true
 
 references:
 - id: ref
@@ -33,7 +32,7 @@ references:
     year: 2016
 
 vignette: >
-  %\VignetteIndexEntry{Parallel functions for Singular Value Decomposition}
+  %\VignetteIndexEntry{Singular Value Decomposition for Federated Data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -78,6 +77,8 @@ library(made4)
 library(brgedata)
 library(parallel)
 library(SummarizedExperiment)
+library(microbenchmark)
+library(BiocStyle)
 ```
 
 
@@ -143,7 +144,10 @@ plot(gJ$Y[setosa,c(1,2)], main="Individuals",
      ylab="PC2 (22.85%)", xlim=c(-4,5.5))
 points(gJ$Y[versicolor,c(1,2)], col="red")
 points(gJ$Y[virginica,c(1,2)], col="green")
-legend("bottomright", legend = c("Setosa", "Versicolor", "Virginica"), col=c("blue", "red", "green"), pch=1, cex=0.75)
+legend("bottomright", 
+       c("Setosa", "Versicolor", "Virginica"), 
+       col=c("blue", "red", "green"), pch=1,
+       cex=0.75)
 ```
 
 As we can see, the individuals are classified according to the species. 
@@ -223,11 +227,14 @@ Now we can also classify them according to the diagnosis of the tumor: benign or
 m <- breast[,2] =="M"
 b <- breast[,2] =="B"
 plot(gpcaL$Y[m,c(1,2)], main="Individuals",
-     type="p", col="blue",xlab="PC1 (44.27%)", ylab="PC2(18.97%)", xlim=c(-18,12), ylim=c(-14,9))
+     type="p", col="blue",xlab="PC1 (44.27%)",
+     ylab="PC2(18.97%)", xlim=c(-18,12),
+     ylim=c(-14,9))
 points(gpcaL$Y[b,c(1,2)], col="red")
 abline(a=0,b=0, lty=3)
 abline(v=0, lty=3)
-legend("topright", legend = c("Malignant", "Benign"), col=c("blue", "red"), pch=1, cex=0.75)
+legend("topright", c("Malignant", "Benign"),
+       col=c("blue", "red"), pch=1, cex=0.75)
 ```
 
 We have been able to compute a PCA of three datasets together without merging them. This means that this function would be applicable to DataSHIELD experiments. 
@@ -263,12 +270,16 @@ In the individuals plot  we can see two differentiated groups. These groups corr
 
 ```{r breastTCGA4,fig.show='hold',fig.align='center',fig.cap = "Principal components of breastTCGA dataset. The plot shows the samples according to their estrongen status."}
 group<-as.factor(breastTCGA$ER.Status)
-plot(gpca$Y[group=="Positive",c(1,2)], main="Individuals",
-       type="p", col="blue",xlab="PC1 (17.84%)", ylab="PC2 (7.61%)", xlim=c(-60,70), ylim=c(-70,60))
+plot(gpca$Y[group=="Positive",c(1,2)],
+     main="Individuals", type="p",
+     col="blue",xlab="PC1 (17.84%)", 
+     ylab="PC2 (7.61%)", xlim=c(-60,70),
+     ylim=c(-70,60))
 points(gpca$Y[group=="Negative",c(1,2)], col="red")
 abline(a=0,b=0, lty=3)
 abline(v=0, lty=3)
-legend("topright", legend = c("Positve", "Negative"), col=c("blue", "red"), pch=1, cex=0.75)
+legend("topright", c("Positve", "Negative"),
+       col=c("blue", "red"), pch=1, cex=0.75)
 ```
 
 There exist specific functions to compute a PCA on gene expression data. This is the case of function `ord`. We can see that we obtain similar results.  
@@ -287,38 +298,58 @@ We can see that the same results can be obtained using this method:
 
 ```{r breastTCGA6, fig.show='hold', fig.align='center', fig.cap="Individuals projections from getPCA function using General Block method. The plot shows the individuals into the two first principal components classified according to their estrongen status."}
 gpca <- getPCA(t(genes),  method="generalBlockSVD", k=2, q=2)
-plot(gpca$Y[group=="Positive",c(1,2)], main="Individuals",
-       type="p", col="blue",xlab="PC1 (17.84%)", ylab="PC2 (7.61%)", xlim=c(-60,70), ylim=c(-70,60))
+plot(gpca$Y[group=="Positive",c(1,2)],
+     main="Individuals", type="p", col="blue",
+     xlab="PC1 (17.84%)", ylab="PC2 (7.61%)",
+     xlim=c(-60,70), ylim=c(-70,60))
 points(gpca$Y[group=="Negative",c(1,2)], col="red")
 abline(a=0,b=0, lty=3)
 abline(v=0, lty=3)
-legend("topright", legend = c("Positve", "Negative"), col=c("blue", "red"), pch=1, cex=0.75)
+legend("topright", c("Positve", "Negative"),
+       col=c("blue", "red"), pch=1, cex=0.75)
 ```
 
 Finally we can compare the different functions performance using the function `microbenchmark`. It computes the computation time of the functions and returns a table with the results. 
 
 
 ```{r breastTCGA7, fig.show='hold', fig.align='center', fig.cap="Violinplot of the computational times for different functions. The two in the bottom are done using Block method and the following two are using General Block method. The second has been done using PCA function and the first one is using ord function."}
-mb <- microbenchmark::microbenchmark("Block method (k=2)"=getPCA(t(genes), parts = 2, center=F, scale=F),
-                               "Block method (k=5)"=getPCA(t(genes), parts = 5, center=F, scale=F),
-                               "General Block method (k=2, q=2)"=getPCA(t(genes), method="generalBlockSVD", k=2, q=2, center=F, scale=F),
-                               "General Block method (k=3, q=2)"=getPCA(t(genes), method="generalBlockSVD", k=3, q=2, center=F, scale=F),
-                               "PCA function"=PCA(t(genes), graph=FALSE), 
-                               "ord function" = ord(genes, classvec=group, type = "pca"), times=10)
-ggplot2::autoplot(mb)
+mb <- microbenchmark("Block method (k=2)"= getPCA(t(genes),
+                       parts = 2, center=F, scale=F),
+                     "Block method (k=5)"=getPCA(t(genes), 
+                       parts = 5, center=F, scale=F),
+                     "General Block method (k=2, q=2)"
+                     = getPCA(t(genes), method="generalBlockSVD",
+                              k=2, q=2, center=F, scale=F),
+                     "General Block method (k=3, q=2)"
+                     = getPCA(t(genes), method="generalBlockSVD",
+                              k=3, q=2, center=F, scale=F),
+                     "PCA function"=PCA(t(genes), graph=FALSE), 
+                     "ord function" = ord(genes, classvec=group,
+                                          type = "pca"), times=10)
+
+autoplot.microbenchmark(mb)
 ```
 
 
 If we look at the mean column we can see that the `PCA` function is the one that last more in average. This can be explained because this function computes a lot of different values a part from the necessary ones to compute a basic PCA. This also happens with function `ord`. These functions compute other scores and it makes it difficult to compare them with the others. The best way to analyze our functions' performance is to compare it to the function `getPCA0`. This function computes a basic PCA using only one SVD of the whole matrix. Our `getPCA` functions are faster in this case than `PCA` and `ord`, but it does not necessarily mean that they are more efficient. 
 
 ```{r breastTCGA8, fig.show='hold', fig.align='center', fig.cap="Violinplot of the computational times for different functions. The two in the bottom are done using Block method and the following two have been done using General Block method. The one in the top is using PCA0, it does not use any method."}
-mb2 <- microbenchmark::microbenchmark("Block method (k=2)"=getPCA(t(genes), parts = 2, center=F, scale=F),
-                               "Block method (k=5)"=getPCA(t(genes), parts = 5, center=F, scale=F),
-                               "General Block method (k=2, q=2)"=getPCA(t(genes), method="generalBlockSVD", k=2, q=2, center=F, scale=F),
-                               "General Block method (k=3, q=2)"=getPCA(t(genes), method="generalBlockSVD", k=3, q=2, center=F, scale=F),
-                               "PCA0 no method"=getPCA0(t(genes), center=F, scale=F),  times=10)
+mb2 <- microbenchmark("Block method (k=2)"= getPCA(t(genes), 
+                        parts = 2, center=F, scale=F),
+                      "Block method (k=5)"= getPCA(t(genes), 
+                        parts = 5, center=F, scale=F),
+                       "General Block method (k=2,q=2)"
+                       = getPCA(t(genes), 
+                      method="generalBlockSVD", k=2, q=2, 
+                      center=F, scale=F),
+                      "General Block method (k=3, q=2)"
+                      = getPCA(t(genes), 
+                      method="generalBlockSVD", k=3, q=2, 
+                      center=F, scale=F),
+                      "PCA0 no method" = getPCA0(t(genes), 
+                      center=F, scale=F),  times=10)
 
-ggplot2::autoplot(mb2)
+autoplot.microbenchmark(mb2)
 ```
 
 The size of the `genes` dataset is not very big so the differences between the different functions are not significant. The performance of the Block method gets better when the size of the dataset increases. 
